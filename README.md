@@ -4,6 +4,23 @@ A collection of small, self-contained utility scripts.
 
 ---
 
+## llm_output_parser.html
+
+A browser-based parser and renderer for LLM chat/completions API responses. Single HTML file — no server, no dependencies.
+
+**Supports:** OpenAI (`chat.completion`) and Anthropic (`message`) response formats.
+
+**Features:**
+- Renders message content as **markdown** (headings, lists, code blocks with syntax highlighting, blockquotes, tables)
+- Collapsible **reasoning/thinking block** highlighted in purple (OpenAI `reasoning_content`, Anthropic `thinking`)
+- **Metadata sidebar** — model, response ID, token usage (prompt/completion/reasoning/cache), finish reason, word/char counts, token distribution bar
+- Sample buttons for both OpenAI and Anthropic formats
+- `Ctrl+Enter` to parse
+
+**Usage:** Open `llm_output_parser.html` in any browser, paste an API response, click **Parse**.
+
+---
+
 ## json_formatter.html
 
 A browser-based JSON formatter. Single HTML file — no server, no dependencies, just open it.

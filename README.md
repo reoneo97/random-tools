@@ -4,6 +4,16 @@ A collection of small, self-contained utility scripts.
 
 ---
 
+## json_formatter.html
+
+A browser-based JSON formatter. Single HTML file — no server, no dependencies, just open it.
+
+**Features:** syntax highlighting, pretty-print, compact mode, sort keys, copy to clipboard, byte/key count.
+
+**Usage:** Open `json_formatter.html` in any browser, paste JSON, click **Format** (or `Ctrl+Enter`).
+
+---
+
 ## json_formatter.py
 
 A JSON formatter and validator with no external dependencies — just Python 3 stdlib.

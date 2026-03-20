@@ -1,0 +1,50 @@
+# random-tools
+
+A collection of small, self-contained utility scripts.
+
+---
+
+## json_formatter.py
+
+A JSON formatter and validator with no external dependencies — just Python 3 stdlib.
+
+### Requirements
+
+- Python 3.6+
+
+### Usage
+
+```
+python3 json_formatter.py [OPTIONS] [FILE]
+```
+
+If `FILE` is omitted, input is read from **stdin**.
+
+### Options
+
+| Flag | Description |
+|------|-------------|
+| `-i N`, `--indent N` | Indentation width in spaces (default: 4) |
+| `-c`, `--compact` | Compact output, no extra whitespace |
+| `-s`, `--sort-keys` | Sort object keys alphabetically |
+| `--validate` | Validate only, no output |
+| `-o FILE`, `--output FILE` | Write result to a file |
+
+### Examples
+
+```bash
+# Pretty-print from stdin
+echo '{"b":2,"a":1}' | python3 json_formatter.py
+
+# From a file with 2-space indent
+python3 json_formatter.py --indent 2 data.json
+
+# Compact output with sorted keys
+python3 json_formatter.py --compact --sort-keys data.json
+
+# Validate only
+python3 json_formatter.py --validate data.json
+
+# Write formatted output to a file
+python3 json_formatter.py data.json --output pretty.json
+```

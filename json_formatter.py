@@ -1,0 +1,124 @@
+#!/usr/bin/env python3
+"""
+json_formatter.py - A simple, self-contained JSON formatter.
+
+Usage:
+  python3 json_formatter.py [OPTIONS] [FILE]
+
+  If FILE is omitted, reads from stdin.
+
+Examples:
+  echo '{"a":1,"b":2}' | python3 json_formatter.py
+  python3 json_formatter.py data.json
+  python3 json_formatter.py --indent 2 data.json
+  python3 json_formatter.py --compact data.json
+  python3 json_formatter.py --sort-keys data.json
+  python3 json_formatter.py --validate data.json
+"""
+
+import argparse
+import json
+import sys
+
+
+def build_parser():
+    parser = argparse.ArgumentParser(
+        description="Format or validate JSON from a file or stdin.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=__doc__,
+    )
+    parser.add_argument(
+        "file",
+        nargs="?",
+        metavar="FILE",
+        help="Input JSON file (default: stdin)",
+    )
+    parser.add_argument(
+        "-i", "--indent",
+        type=int,
+        default=4,
+        metavar="N",
+        help="Number of spaces for indentation (default: 4)",
+    )
+    parser.add_argument(
+        "-c", "--compact",
+        action="store_true",
+        help="Output compact JSON with no extra whitespace",
+    )
+    parser.add_argument(
+        "-s", "--sort-keys",
+        action="store_true",
+        help="Sort object keys alphabetically",
+    )
+    parser.add_argument(
+        "--validate",
+        action="store_true",
+        help="Only validate the JSON without printing output",
+    )
+    parser.add_argument(
+        "-o", "--output",
+        metavar="FILE",
+        help="Write output to FILE instead of stdout",
+    )
+    return parser
+
+
+def read_input(file_path):
+    if file_path:
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                return f.read()
+        except FileNotFoundError:
+            print(f"Error: file not found: {file_path}", file=sys.stderr)
+            sys.exit(1)
+        except OSError as e:
+            print(f"Error reading file: {e}", file=sys.stderr)
+            sys.exit(1)
+    else:
+        return sys.stdin.read()
+
+
+def parse_json(raw):
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError as e:
+        print(f"JSON parse error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+def format_json(data, indent, compact, sort_keys):
+    if compact:
+        return json.dumps(data, separators=(",", ":"), sort_keys=sort_keys)
+    return json.dumps(data, indent=indent, sort_keys=sort_keys, ensure_ascii=False)
+
+
+def write_output(text, output_path):
+    if output_path:
+        try:
+            with open(output_path, "w", encoding="utf-8") as f:
+                f.write(text)
+                f.write("\n")
+        except OSError as e:
+            print(f"Error writing output: {e}", file=sys.stderr)
+            sys.exit(1)
+    else:
+        print(text)
+
+
+def main():
+    parser = build_parser()
+    args = parser.parse_args()
+
+    raw = read_input(args.file)
+    data = parse_json(raw)
+
+    if args.validate:
+        print("Valid JSON.")
+        return
+
+    formatted = format_json(data, args.indent, args.compact, args.sort_keys)
+    write_output(formatted, args.output)
+
+
+if __name__ == "__main__":
+    main()

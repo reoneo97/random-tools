@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLM Response Evaluator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0f1117;
+      --bg2:      #141820;
+      --bg3:      #1a2035;
+      --border:   #1e2533;
+      --text:     #e2e8f0;
+      --muted:    #64748b;
+      --blue:     #3b82f6;
+      --blue-d:   #2563eb;
+      --green:    #34d399;
+      --purple:   #a78bfa;
+      --orange:   #fb923c;
+      --red:      #f87171;
+    }
+
+    body {
+      font-family: system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ──────────────────────────────────────────────────────── */
+    header {
+      padding: 13px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    header h1 { font-size: 1.1rem; font-weight: 600; }
+    .badge {
+      font-size: 0.68rem; padding: 2px 8px; border-radius: 999px;
+      background: #1e3a5f; color: var(--blue); font-weight: 700;
+    }
+
+    /* ── Tabs ────────────────────────────────────────────────────────── */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px;
+      flex-shrink: 0;
+      background: var(--bg);
+    }
+    .tab-btn {
+      padding: 10px 18px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--muted);
+      border: none;
+      border-bottom: 2px solid transparent;
+      background: transparent;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+      margin-bottom: -1px;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+    .tab-panel { display: none; flex: 1; overflow: hidden; flex-direction: column; }
+    .tab-panel.active { display: flex; }
+
+    /* ── Shared layout ───────────────────────────────────────────────── */
+    .split {
+      display: grid;
+      flex: 1;
+      overflow: hidden;
+      min-height: 0;
+    }
+    .split-2 { grid-template-columns: 1fr 1fr; }
+    .split-3 { grid-template-columns: 1fr 1fr 280px; }
+
+    @media (max-width: 860px) {
+      .split-2, .split-3 { grid-template-columns: 1fr; }
+    }
+
+    .col {
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--border);
+      overflow: hidden;
+      min-height: 0;
+    }
+    .col:last-child { border-right: none; }
+
+    .col-header {
+      padding: 8px 14px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .col-header .acts { display: flex; gap: 6px; }
+
+    .scroll { flex: 1; overflow-y: auto; padding: 16px; min-height: 0; }
+
+    textarea {
+      width: 100%;
+      height: 100%;
+      font-family: "JetBrains Mono", "Fira Code", monospace;
+      font-size: 0.8rem;
+      line-height: 1.6;
+      background: transparent;
+      color: var(--text);
+      border: none;
+      resize: none;
+      outline: none;
+      padding: 14px;
+      flex: 1;
+    }
+    textarea::placeholder { color: #3d4f6b; }
+
+    .status-bar {
+      padding: 4px 14px;
+      font-size: 0.7rem;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      min-height: 22px;
+      flex-shrink: 0;
+    }
+    .err { color: var(--red); }
+    .ok  { color: var(--green); }
+    .info { color: var(--blue); }
+
+    /* ── Buttons ─────────────────────────────────────────────────────── */
+    button {
+      font-size: 0.78rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg3);
+      color: var(--text);
+      cursor: pointer;
+      padding: 4px 12px;
+      font-weight: 500;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    button:hover { background: #243050; border-color: var(--blue); }
+    button.primary { background: var(--blue-d); border-color: var(--blue-d); color: #fff; }
+    button.primary:hover { background: #1d4ed8; }
+    button.danger  { color: var(--red); border-color: #7f1d1d; }
+    button.danger:hover  { background: #7f1d1d33; }
+    button.success { background: #065f46; border-color: var(--green); color: var(--green); }
+
+    .toolbar {
+      padding: 8px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+    .sep { width: 1px; height: 18px; background: var(--border); }
+
+    /* ── Score sliders ───────────────────────────────────────────────── */
+    .criteria-list { display: flex; flex-direction: column; gap: 14px; }
+
+    .criterion { display: flex; flex-direction: column; gap: 6px; }
+    .criterion-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .criterion-label { font-size: 0.82rem; font-weight: 600; color: var(--text); }
+    .criterion-desc  { font-size: 0.7rem; color: var(--muted); }
+
+    .score-row { display: flex; align-items: center; gap: 10px; }
+
+    input[type=range] {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--border);
+      outline: none;
+      cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--blue);
+      cursor: pointer;
+      border: 2px solid var(--bg);
+      transition: background 0.15s;
+    }
+    input[type=range]::-webkit-slider-thumb:hover { background: var(--blue-d); }
+
+    .score-badge {
+      font-size: 0.82rem;
+      font-weight: 700;
+      width: 28px;
+      text-align: right;
+    }
+
+    /* ── Overall score card ──────────────────────────────────────────── */
+    .score-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .score-card .big-score {
+      font-size: 2.8rem;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .score-card .score-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+
+    .verdict-badge {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+    }
+
+    /* ── Notes ───────────────────────────────────────────────────────── */
+    .notes-area {
+      width: 100%;
+      min-height: 90px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+      color: var(--text);
+      font-size: 0.82rem;
+      font-family: system-ui, sans-serif;
+      line-height: 1.5;
+      resize: vertical;
+      outline: none;
+    }
+    .notes-area:focus { border-color: var(--blue); }
+
+    /* ── Rubric ──────────────────────────────────────────────────────── */
+    .rubric-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .rubric-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      transition: border-color 0.15s;
+    }
+    .rubric-item.pass  { border-color: #065f46; background: #052e1e; }
+    .rubric-item.fail  { border-color: #7f1d1d; background: #2a0a0a; }
+
+    .rubric-check {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .rubric-check button {
+      padding: 2px 8px;
+      font-size: 0.7rem;
+      min-width: 44px;
+    }
+    .rubric-check button.active-pass { background: #065f46; border-color: var(--green); color: var(--green); }
+    .rubric-check button.active-fail { background: #7f1d1d; border-color: var(--red); color: var(--red); }
+
+    .rubric-body { flex: 1; }
+    .rubric-criterion { font-size: 0.82rem; font-weight: 600; margin-bottom: 2px; }
+    .rubric-note { font-size: 0.72rem; color: var(--muted); }
+
+    .rubric-add {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .rubric-add input {
+      flex: 1;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 10px;
+      color: var(--text);
+      font-size: 0.82rem;
+      outline: none;
+    }
+    .rubric-add input:focus { border-color: var(--blue); }
+
+    .rubric-summary {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 14px;
+    }
+    .rubric-summary .big { font-size: 1.6rem; font-weight: 800; }
+    .rubric-summary .sub { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+
+    /* ── A/B comparison ──────────────────────────────────────────────── */
+    .ab-score-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .ab-score-row .ab-label { font-size: 0.78rem; color: var(--muted); min-width: 120px; }
+    .ab-mini-slider { flex: 1; }
+    .ab-val { font-size: 0.78rem; font-weight: 700; min-width: 18px; text-align: right; }
+    .ab-val-a { color: #60a5fa; }
+    .ab-val-b { color: #f472b6; }
+
+    .winner-banner {
+      text-align: center;
+      padding: 14px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 700;
+      margin-top: 12px;
+    }
+    .winner-a { background: #1e3a5f; color: #60a5fa; }
+    .winner-b { background: #4a1040; color: #f472b6; }
+    .winner-tie { background: #1e2533; color: var(--muted); }
+
+    /* ── Export ──────────────────────────────────────────────────────── */
+    .export-area {
+      font-family: monospace;
+      font-size: 0.75rem;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      color: #94a3b8;
+      white-space: pre-wrap;
+      max-height: 200px;
+      overflow-y: auto;
+      margin-top: 10px;
+    }
+
+    .section-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 10px;
+      margin-top: 16px;
+    }
+    .section-title:first-child { margin-top: 0; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>LLM Response Evaluator</h1>
+  <span class="badge">No dependencies</span>
+</header>
+
+<!-- ── Tab bar ───────────────────────────────────────────────────────── -->
+<div class="tabs">
+  <button class="tab-btn active" data-tab="score">Score</button>
+  <button class="tab-btn" data-tab="compare">A/B Compare</button>
+  <button class="tab-btn" data-tab="rubric">Rubric</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!--  TAB 1 · SCORE                                                     -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div class="tab-panel active" id="tab-score">
+  <div class="split split-3" style="flex:1;min-height:0;">
+
+    <!-- Input -->
+    <div class="col">
+      <div class="col-header">Response</div>
+      <div class="toolbar">
+        <button id="s-sample">Load sample</button>
+        <button class="danger" id="s-clear">Clear</button>
+      </div>
+      <textarea id="s-input" placeholder="Paste the LLM response to evaluate…"></textarea>
+      <div class="status-bar" id="s-status"></div>
+    </div>
+
+    <!-- Criteria -->
+    <div class="col">
+      <div class="col-header">Scoring Criteria</div>
+      <div class="scroll">
+        <div class="criteria-list" id="s-criteria">
+          <!-- injected by JS -->
+        </div>
+
+        <div class="section-title" style="margin-top:20px;">Evaluator Notes</div>
+        <textarea class="notes-area" id="s-notes" placeholder="Optional notes, observations, or justification…"></textarea>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="col">
+      <div class="col-header">
+        Summary
+        <div class="acts"><button id="s-export">Export JSON</button></div>
+      </div>
+      <div class="scroll">
+        <div class="score-card">
+          <div class="big-score" id="s-overall">–</div>
+          <div class="score-label">Overall Score / 10</div>
+          <div id="s-verdict"></div>
+        </div>
+
+        <div id="s-breakdown"></div>
+
+        <div id="s-export-area" style="display:none">
+          <div class="section-title" style="margin-top:16px;">Export</div>
+          <div class="export-area" id="s-export-json"></div>
+          <button style="margin-top:8px" id="s-copy-export">Copy JSON</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!--  TAB 2 · A/B COMPARE                                               -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div class="tab-panel" id="tab-compare">
+  <div class="split split-3" style="flex:1;min-height:0;">
+
+    <!-- Response A -->
+    <div class="col">
+      <div class="col-header" style="color:#60a5fa">Response A</div>
+      <textarea id="ab-a" placeholder="Paste Response A…"></textarea>
+    </div>
+
+    <!-- Response B -->
+    <div class="col">
+      <div class="col-header" style="color:#f472b6">Response B</div>
+      <textarea id="ab-b" placeholder="Paste Response B…"></textarea>
+    </div>
+
+    <!-- Scores -->
+    <div class="col">
+      <div class="col-header">
+        Comparative Scores
+        <div class="acts"><button id="ab-export">Export JSON</button></div>
+      </div>
+      <div class="scroll">
+        <div id="ab-criteria"></div>
+
+        <div id="ab-winner" class="winner-banner winner-tie" style="display:none"></div>
+
+        <div class="section-title" style="margin-top:16px;">Notes</div>
+        <textarea class="notes-area" id="ab-notes" placeholder="Comparison notes…"></textarea>
+
+        <div id="ab-export-area" style="display:none;margin-top:12px;">
+          <div class="export-area" id="ab-export-json"></div>
+          <button style="margin-top:8px" id="ab-copy-export">Copy JSON</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!--  TAB 3 · RUBRIC                                                    -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div class="tab-panel" id="tab-rubric">
+  <div class="split split-2" style="flex:1;min-height:0;">
+
+    <!-- Response -->
+    <div class="col">
+      <div class="col-header">Response</div>
+      <textarea id="r-input" placeholder="Paste the LLM response to evaluate…"></textarea>
+    </div>
+
+    <!-- Checklist -->
+    <div class="col">
+      <div class="col-header">
+        Checklist
+        <div class="acts"><button id="r-export">Export JSON</button></div>
+      </div>
+      <div class="scroll">
+
+        <div class="rubric-summary">
+          <div class="big" id="r-summary-score">0 / 0</div>
+          <div class="sub" id="r-summary-pct">No criteria evaluated yet</div>
+        </div>
+
+        <div class="rubric-add">
+          <input id="r-new-text" placeholder="Add a criterion… e.g. 'Cites sources'" />
+          <button id="r-add-btn">Add</button>
+        </div>
+
+        <div style="margin-top:12px;" class="rubric-list" id="r-list"></div>
+
+        <div id="r-export-area" style="display:none;margin-top:14px;">
+          <div class="export-area" id="r-export-json"></div>
+          <button style="margin-top:8px" id="r-copy-export">Copy JSON</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(() => {
+  // ── Utilities ───────────────────────────────────────────────────────
+
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function scoreColor(v, max = 10) {
+    const pct = v / max;
+    if (pct >= 0.8) return 'var(--green)';
+    if (pct >= 0.5) return 'var(--orange)';
+    return 'var(--red)';
+  }
+
+  function verdict(avg) {
+    if (avg >= 8.5) return ['Excellent', '#065f46', 'var(--green)'];
+    if (avg >= 7)   return ['Good',      '#1e3a5f', 'var(--blue)'];
+    if (avg >= 5)   return ['Fair',      '#3b1f00', 'var(--orange)'];
+    return              ['Poor',      '#3b0000', 'var(--red)'];
+  }
+
+  async function copyText(text, btn, label = 'Copy JSON') {
+    await navigator.clipboard.writeText(text);
+    btn.textContent = 'Copied!';
+    setTimeout(() => (btn.textContent = label), 1500);
+  }
+
+  // ── Tab switching ───────────────────────────────────────────────────
+
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════
+  //  TAB 1 · SCORE
+  // ═══════════════════════════════════════════════════════════════════
+
+  const CRITERIA = [
+    { id: 'relevance',    label: 'Relevance',    desc: 'Does the response directly address the question?' },
+    { id: 'accuracy',     label: 'Accuracy',     desc: 'Is the information factually correct?' },
+    { id: 'completeness', label: 'Completeness', desc: 'Is the answer thorough and not missing key points?' },
+    { id: 'coherence',    label: 'Coherence',    desc: 'Is the response logically structured and easy to follow?' },
+    { id: 'conciseness',  label: 'Conciseness',  desc: 'Is the response appropriately concise without padding?' },
+    { id: 'tone',         label: 'Tone',         desc: 'Is the tone appropriate for the context?' },
+    { id: 'helpfulness',  label: 'Helpfulness',  desc: 'Would this response genuinely help the user?' },
+  ];
+
+  const scores = {};
+  CRITERIA.forEach(c => (scores[c.id] = 5));
+
+  function buildCriteria() {
+    const container = document.getElementById('s-criteria');
+    container.innerHTML = CRITERIA.map(c => `
+      <div class="criterion">
+        <div class="criterion-top">
+          <span class="criterion-label">${esc(c.label)}</span>
+          <span class="criterion-desc">${esc(c.desc)}</span>
+        </div>
+        <div class="score-row">
+          <input type="range" min="1" max="10" value="5" data-id="${c.id}" class="s-slider">
+          <span class="score-badge" id="sb-${c.id}" style="color:${scoreColor(5)}">5</span>
+        </div>
+      </div>
+    `).join('');
+
+    container.querySelectorAll('.s-slider').forEach(sl => {
+      sl.addEventListener('input', () => {
+        const v = Number(sl.value);
+        scores[sl.dataset.id] = v;
+        const badge = document.getElementById('sb-' + sl.dataset.id);
+        badge.textContent = v;
+        badge.style.color = scoreColor(v);
+        updateScoreSummary();
+      });
+    });
+  }
+
+  function updateScoreSummary() {
+    const vals = Object.values(scores);
+    const avg  = vals.reduce((a, b) => a + b, 0) / vals.length;
+    const rounded = Math.round(avg * 10) / 10;
+
+    const overallEl = document.getElementById('s-overall');
+    overallEl.textContent = rounded;
+    overallEl.style.color = scoreColor(avg);
+
+    const [label, bg, color] = verdict(avg);
+    const verdictEl = document.getElementById('s-verdict');
+    verdictEl.innerHTML = `<span class="verdict-badge" style="background:${bg};color:${color}">${label}</span>`;
+
+    const breakdownEl = document.getElementById('s-breakdown');
+    breakdownEl.innerHTML = '<div class="section-title">Breakdown</div>' +
+      CRITERIA.map(c => {
+        const v   = scores[c.id];
+        const pct = (v / 10) * 100;
+        return `
+          <div style="margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:3px;">
+              <span>${esc(c.label)}</span>
+              <span style="font-weight:700;color:${scoreColor(v)}">${v}/10</span>
+            </div>
+            <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;">
+              <div style="height:100%;width:${pct}%;background:${scoreColor(v)};border-radius:2px;transition:width 0.2s"></div>
+            </div>
+          </div>`;
+      }).join('');
+  }
+
+  document.getElementById('s-sample').addEventListener('click', () => {
+    document.getElementById('s-input').value =
+      "Merge sort is a divide-and-conquer algorithm. It splits the array in half, recursively sorts each half, then merges the two sorted halves. Time complexity is O(n log n) in all cases, and space complexity is O(n). It's stable and particularly well-suited to sorting linked lists or data too large to fit in memory (external sorting).";
+  });
+
+  document.getElementById('s-clear').addEventListener('click', () => {
+    document.getElementById('s-input').value = '';
+  });
+
+  document.getElementById('s-export').addEventListener('click', () => {
+    const area = document.getElementById('s-export-area');
+    const json = document.getElementById('s-export-json');
+    const vals = Object.values(scores);
+    const avg  = Math.round((vals.reduce((a,b) => a+b,0) / vals.length) * 10) / 10;
+    const data = {
+      overall: avg,
+      verdict: verdict(avg)[0],
+      scores: Object.fromEntries(CRITERIA.map(c => [c.id, scores[c.id]])),
+      notes: document.getElementById('s-notes').value,
+      response_preview: document.getElementById('s-input').value.slice(0, 120) + '…',
+      evaluated_at: new Date().toISOString(),
+    };
+    json.textContent = JSON.stringify(data, null, 2);
+    area.style.display = '';
+  });
+
+  document.getElementById('s-copy-export').addEventListener('click', function() {
+    copyText(document.getElementById('s-export-json').textContent, this);
+  });
+
+  buildCriteria();
+  updateScoreSummary();
+
+  // ═══════════════════════════════════════════════════════════════════
+  //  TAB 2 · A/B COMPARE
+  // ═══════════════════════════════════════════════════════════════════
+
+  const abScores = {};  // { criterion_id: { a: 5, b: 5 } }
+  CRITERIA.forEach(c => (abScores[c.id] = { a: 5, b: 5 }));
+
+  function buildABCriteria() {
+    const container = document.getElementById('ab-criteria');
+    container.innerHTML = CRITERIA.map(c => `
+      <div style="margin-bottom:14px;">
+        <div style="font-size:0.8rem;font-weight:600;margin-bottom:6px;">${esc(c.label)}</div>
+        <div class="ab-score-row">
+          <span class="ab-label" style="color:#60a5fa">A</span>
+          <input type="range" min="1" max="10" value="5" class="ab-mini-slider" data-id="${c.id}" data-side="a">
+          <span class="ab-val ab-val-a" id="ab-${c.id}-a">5</span>
+        </div>
+        <div class="ab-score-row">
+          <span class="ab-label" style="color:#f472b6">B</span>
+          <input type="range" min="1" max="10" value="5" class="ab-mini-slider" data-id="${c.id}" data-side="b">
+          <span class="ab-val ab-val-b" id="ab-${c.id}-b">5</span>
+        </div>
+      </div>
+    `).join('');
+
+    container.querySelectorAll('.ab-mini-slider').forEach(sl => {
+      sl.addEventListener('input', () => {
+        const { id, side } = sl.dataset;
+        abScores[id][side] = Number(sl.value);
+        document.getElementById(`ab-${id}-${side}`).textContent = sl.value;
+        updateABWinner();
+      });
+    });
+  }
+
+  function updateABWinner() {
+    const totA = CRITERIA.reduce((s, c) => s + abScores[c.id].a, 0);
+    const totB = CRITERIA.reduce((s, c) => s + abScores[c.id].b, 0);
+    const avgA = (totA / CRITERIA.length).toFixed(1);
+    const avgB = (totB / CRITERIA.length).toFixed(1);
+
+    const banner = document.getElementById('ab-winner');
+    banner.style.display = '';
+    if (totA > totB)      { banner.className = 'winner-banner winner-a'; banner.textContent = `🏆 Response A wins  (${avgA} vs ${avgB})`; }
+    else if (totB > totA) { banner.className = 'winner-banner winner-b'; banner.textContent = `🏆 Response B wins  (${avgB} vs ${avgA})`; }
+    else                  { banner.className = 'winner-banner winner-tie'; banner.textContent = `🤝 Tie  (${avgA} = ${avgB})`; }
+  }
+
+  document.getElementById('ab-export').addEventListener('click', () => {
+    const area = document.getElementById('ab-export-area');
+    const json = document.getElementById('ab-export-json');
+    const totA = CRITERIA.reduce((s, c) => s + abScores[c.id].a, 0);
+    const totB = CRITERIA.reduce((s, c) => s + abScores[c.id].b, 0);
+    const data = {
+      winner: totA > totB ? 'A' : totB > totA ? 'B' : 'tie',
+      avg_a: Math.round((totA / CRITERIA.length) * 10) / 10,
+      avg_b: Math.round((totB / CRITERIA.length) * 10) / 10,
+      scores: Object.fromEntries(CRITERIA.map(c => [c.id, abScores[c.id]])),
+      notes: document.getElementById('ab-notes').value,
+      evaluated_at: new Date().toISOString(),
+    };
+    json.textContent = JSON.stringify(data, null, 2);
+    area.style.display = '';
+  });
+
+  document.getElementById('ab-copy-export').addEventListener('click', function() {
+    copyText(document.getElementById('ab-export-json').textContent, this);
+  });
+
+  buildABCriteria();
+
+  // ═══════════════════════════════════════════════════════════════════
+  //  TAB 3 · RUBRIC
+  // ═══════════════════════════════════════════════════════════════════
+
+  const rubricItems = [
+    { id: uid(), text: 'Answers the question directly', state: null },
+    { id: uid(), text: 'No hallucinated facts', state: null },
+    { id: uid(), text: 'Appropriate length (not too long or too short)', state: null },
+    { id: uid(), text: 'Uses correct formatting', state: null },
+    { id: uid(), text: 'Maintains appropriate tone', state: null },
+  ];
+
+  function uid() { return Math.random().toString(36).slice(2); }
+
+  function renderRubric() {
+    const list = document.getElementById('r-list');
+    if (!rubricItems.length) { list.innerHTML = '<div style="color:var(--muted);font-size:0.8rem;">No criteria yet. Add one above.</div>'; }
+    else {
+      list.innerHTML = rubricItems.map(item => {
+        const cls = item.state === 'pass' ? 'pass' : item.state === 'fail' ? 'fail' : '';
+        const passCls = item.state === 'pass' ? 'active-pass' : '';
+        const failCls = item.state === 'fail' ? 'active-fail' : '';
+        return `
+          <div class="rubric-item ${cls}" id="ri-${item.id}">
+            <div class="rubric-check">
+              <button class="${passCls}" onclick="rubricMark('${item.id}','pass')">✔ Pass</button>
+              <button class="${failCls}" onclick="rubricMark('${item.id}','fail')">✖ Fail</button>
+            </div>
+            <div class="rubric-body">
+              <div class="rubric-criterion">${esc(item.text)}</div>
+            </div>
+            <button onclick="rubricDelete('${item.id}')" style="color:var(--muted);border:none;background:transparent;font-size:1rem;padding:0 4px;cursor:pointer;" title="Remove">×</button>
+          </div>`;
+      }).join('');
+    }
+    updateRubricSummary();
+  }
+
+  function updateRubricSummary() {
+    const evaluated = rubricItems.filter(i => i.state !== null);
+    const passed    = rubricItems.filter(i => i.state === 'pass');
+    const total     = rubricItems.length;
+    const pct       = evaluated.length ? Math.round((passed.length / evaluated.length) * 100) : 0;
+
+    document.getElementById('r-summary-score').textContent = `${passed.length} / ${evaluated.length}`;
+    document.getElementById('r-summary-score').style.color = scoreColor(pct, 100);
+    document.getElementById('r-summary-pct').textContent =
+      evaluated.length
+        ? `${pct}% pass rate · ${total - evaluated.length} unevaluated`
+        : 'No criteria evaluated yet';
+  }
+
+  window.rubricMark = (id, state) => {
+    const item = rubricItems.find(i => i.id === id);
+    if (!item) return;
+    item.state = item.state === state ? null : state;  // toggle off
+    renderRubric();
+  };
+
+  window.rubricDelete = (id) => {
+    const idx = rubricItems.findIndex(i => i.id === id);
+    if (idx !== -1) { rubricItems.splice(idx, 1); renderRubric(); }
+  };
+
+  document.getElementById('r-add-btn').addEventListener('click', () => {
+    const input = document.getElementById('r-new-text');
+    const text  = input.value.trim();
+    if (!text) return;
+    rubricItems.push({ id: uid(), text, state: null });
+    input.value = '';
+    renderRubric();
+  });
+
+  document.getElementById('r-new-text').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('r-add-btn').click();
+  });
+
+  document.getElementById('r-export').addEventListener('click', () => {
+    const area = document.getElementById('r-export-area');
+    const json = document.getElementById('r-export-json');
+    const passed = rubricItems.filter(i => i.state === 'pass').length;
+    const evaluated = rubricItems.filter(i => i.state !== null).length;
+    const data = {
+      passed,
+      failed: rubricItems.filter(i => i.state === 'fail').length,
+      unevaluated: rubricItems.filter(i => i.state === null).length,
+      pass_rate: evaluated ? Math.round((passed / evaluated) * 100) + '%' : 'N/A',
+      criteria: rubricItems.map(i => ({ criterion: i.text, result: i.state })),
+      response_preview: document.getElementById('r-input').value.slice(0, 120) + '…',
+      evaluated_at: new Date().toISOString(),
+    };
+    json.textContent = JSON.stringify(data, null, 2);
+    area.style.display = '';
+  });
+
+  document.getElementById('r-copy-export').addEventListener('click', function() {
+    copyText(document.getElementById('r-export-json').textContent, this);
+  });
+
+  renderRubric();
+
+})();
+</script>
+</body>
+</html>

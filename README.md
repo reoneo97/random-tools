@@ -4,6 +4,24 @@ A collection of small, self-contained utility scripts.
 
 ---
 
+## llm_eval.html
+
+A browser-based LLM response evaluator. Single HTML file — no server, no dependencies.
+
+**3 tabs:**
+
+| Tab | What it does |
+|-----|-------------|
+| **Score** | Rate a response on 7 criteria (relevance, accuracy, completeness, coherence, conciseness, tone, helpfulness) with sliders. Shows overall score, verdict, and per-criterion breakdown bars. |
+| **A/B Compare** | Score two responses side-by-side on the same criteria and see which wins. |
+| **Rubric** | Build a custom pass/fail checklist. Toggle each criterion, track pass rate. |
+
+All tabs export results as JSON.
+
+**Usage:** Open `llm_eval.html` in any browser.
+
+---
+
 ## llm_output_parser.html
 
 A browser-based parser and renderer for LLM chat/completions API responses. Single HTML file — no server, no dependencies.

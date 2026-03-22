@@ -1,0 +1,11 @@
+.bar {
+  padding: 4px 14px;
+  font-size: 0.7rem;
+  min-height: 22px;
+  flex-shrink: 0;
+  border-top: 1px solid var(--border);
+}
+.muted { color: var(--muted); }
+.ok    { color: var(--green); }
+.err   { color: var(--red); }
+.info  { color: var(--blue); }

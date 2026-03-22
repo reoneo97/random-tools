@@ -1,0 +1,74 @@
+.root { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+
+.panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr 260px;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+@media (max-width: 900px) { .panels { grid-template-columns: 1fr; } }
+
+.toolbar { padding: 8px 14px; border-bottom: 1px solid var(--border); display: flex; gap: 8px; flex-shrink: 0; }
+
+.textarea {
+  flex: 1; width: 100%;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.8rem; line-height: 1.6;
+  padding: 14px; background: transparent; color: var(--text);
+  border: none; resize: none; outline: none;
+}
+.textarea::placeholder { color: #3d4f6b; }
+
+.rendered { flex: 1; overflow-y: auto; padding: 16px; }
+.placeholder { color: #3d4f6b; font-size: 0.82rem; }
+
+/* Role pill */
+.rolePill {
+  display: inline-block; font-size: 0.68rem; padding: 2px 8px;
+  border-radius: 999px; font-weight: 600; margin-bottom: 10px;
+}
+.role_assistant { background: #1e3a5f; color: #60a5fa; }
+.role_user      { background: #14532d; color: #4ade80; }
+.role_system    { background: #3b1f00; color: #fb923c; }
+
+/* Reasoning */
+.reasoningBlock { margin: 10px 0; border-left: 3px solid #7c3aed; background: #1a1030; border-radius: 0 6px 6px 0; overflow: hidden; }
+.reasoningHeader { display: flex; justify-content: space-between; padding: 6px 12px; background: #221540; font-size: 0.72rem; font-weight: 700; color: #a78bfa; text-transform: uppercase; letter-spacing: 0.07em; cursor: pointer; user-select: none; }
+.reasoningHeader:hover { background: #2a1a52; }
+.reasoningBody { padding: 10px 14px; font-size: 0.8rem; color: #c4b5fd; white-space: pre-wrap; font-family: monospace; line-height: 1.5; }
+
+.divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+/* Markdown */
+.mdContent { line-height: 1.7; font-size: 0.88rem; }
+.mdContent :global(h1) { font-size: 1.4em; font-weight: 700; margin: 16px 0 8px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+.mdContent :global(h2) { font-size: 1.2em; font-weight: 700; margin: 14px 0 6px; }
+.mdContent :global(h3) { font-size: 1.05em; font-weight: 600; margin: 12px 0 4px; }
+.mdContent :global(p)  { margin: 8px 0; }
+.mdContent :global(ul), .mdContent :global(ol) { margin: 8px 0 8px 20px; }
+.mdContent :global(li) { margin: 3px 0; }
+.mdContent :global(blockquote) { border-left: 3px solid var(--blue); margin: 10px 0; padding: 6px 12px; background: #131c2e; color: #94a3b8; border-radius: 0 4px 4px 0; }
+.mdContent :global(hr) { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+.mdContent :global(a)  { color: #60a5fa; }
+.mdContent :global(strong) { font-weight: 700; }
+.mdContent :global(em) { font-style: italic; color: #cbd5e1; }
+.mdContent :global(code) { font-family: monospace; font-size: 0.82em; background: #1e293b; color: #34d399; padding: 1px 5px; border-radius: 4px; }
+.mdContent :global(pre) { background: #111827; border: 1px solid var(--border); border-radius: 8px; margin: 10px 0; overflow: auto; }
+.mdContent :global(pre) :global(code) { display: block; padding: 12px; background: transparent; color: var(--text); white-space: pre; font-size: 0.8rem; }
+
+/* Stats sidebar */
+.statsBody { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 16px; }
+.statGroup h3 { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #475569; margin-bottom: 8px; }
+.statGroupTitle { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #475569; margin-bottom: 8px; display: block; }
+.statRow { display: flex; justify-content: space-between; align-items: baseline; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 0.78rem; }
+.statRow:last-child { border-bottom: none; }
+.statLabel { color: var(--muted); }
+.statValue { font-weight: 600; font-family: monospace; }
+.highlight { color: #60a5fa; }
+.good      { color: var(--green); }
+.warn      { color: var(--orange); }
+.purple    { color: var(--purple); }
+.tokenBar { height: 6px; border-radius: 3px; background: var(--border); margin-top: 8px; overflow: hidden; }
+.tokenBarFill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #2563eb, #7c3aed); }
+.tokenBarLabel { font-size: 0.68rem; color: #475569; margin-top: 4px; text-align: right; }

@@ -53,7 +53,7 @@
   width: 100%;
   min-height: 0;
 }
-.textarea::placeholder { color: #3d4f6b; }
+.textarea::placeholder { color: #4e6280; }
 
 .output {
   flex: 1;

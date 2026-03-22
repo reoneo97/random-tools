@@ -1,0 +1,54 @@
+.tree {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 0.8rem;
+  line-height: 1.9;
+  padding: 12px 14px;
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.line {
+  display: flex;
+  align-items: baseline;
+  padding-left: calc(var(--depth, 0) * 20px);
+}
+
+/* Arrow toggle button */
+.toggle {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.6rem;
+  color: var(--muted);
+  padding: 0;
+  margin-right: 5px;
+  width: 10px;
+  flex-shrink: 0;
+  line-height: 1;
+  transition: color 0.1s;
+  user-select: none;
+}
+.toggle:hover { color: var(--blue); }
+
+/* Placeholder that occupies the same space as .toggle + margin for primitives */
+.gap {
+  display: inline-block;
+  width: 15px;
+  flex-shrink: 0;
+}
+
+/* Syntax colours */
+.key   { color: #60a5fa; }
+.punct { color: var(--muted); }
+.str   { color: #34d399; }
+.num   { color: #fb923c; }
+.bool  { color: #a78bfa; }
+.nul   { color: #a78bfa; font-style: italic; }
+
+/* Collapsed summary e.g. " 3 keys " */
+.summary {
+  color: #4e6280;
+  font-style: italic;
+  font-size: 0.75rem;
+}

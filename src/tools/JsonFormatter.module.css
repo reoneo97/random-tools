@@ -55,21 +55,11 @@
 }
 .textarea::placeholder { color: #4e6280; }
 
-.output {
+.emptyOutput {
   flex: 1;
-  font-family: "JetBrains Mono", "Fira Code", monospace;
-  font-size: 0.8rem;
-  line-height: 1.6;
-  padding: 14px;
-  overflow: auto;
-  white-space: pre;
-  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4e6280;
+  font-size: 0.82rem;
 }
-
-/* syntax tokens */
-:global(.tok-key)   { color: #60a5fa; }
-:global(.tok-str)   { color: #34d399; }
-:global(.tok-num)   { color: #fb923c; }
-:global(.tok-bool)  { color: #a78bfa; }
-:global(.tok-null)  { color: #a78bfa; }
-:global(.tok-punct) { color: #64748b; }

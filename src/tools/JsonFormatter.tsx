@@ -2,27 +2,10 @@ import { useState, useCallback, useRef } from 'react'
 import Panel from '../components/Panel'
 import Button from '../components/Button'
 import StatusBar from '../components/StatusBar'
+import JsonTree, { collectPaths } from './JsonTree'
 import styles from './JsonFormatter.module.css'
 
 type StatusKind = 'ok' | 'err' | 'info' | 'muted'
-
-function highlight(json: string): string {
-  return json
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(
-      /("(\\u[\da-fA-F]{4}|\\[^u]|[^"\\])*")(\s*:)?|(-?\d+\.?\d*(?:[eE][+-]?\d+)?)|true|false|null|[{}\[\],]/g,
-      match => {
-        if (/^"/.test(match))
-          return match.endsWith(':')
-            ? `<span class="tok-key">${match.slice(0, -1)}</span>:`
-            : `<span class="tok-str">${match}</span>`
-        if (/true|false/.test(match)) return `<span class="tok-bool">${match}</span>`
-        if (/null/.test(match))       return `<span class="tok-null">${match}</span>`
-        if (/[{}\[\],]/.test(match))  return `<span class="tok-punct">${match}</span>`
-        return `<span class="tok-num">${match}</span>`
-      }
-    )
-}
 
 const SAMPLE = JSON.stringify({
   name: 'json-formatter',
@@ -32,13 +15,14 @@ const SAMPLE = JSON.stringify({
 }, null, 2)
 
 export default function JsonFormatter() {
-  const [input, setInput]           = useState('')
-  const [output, setOutput]         = useState('')
-  const [highlighted, setHighlight] = useState('')
-  const [status, setStatus]         = useState<{ msg: string; kind: StatusKind }>({ msg: '', kind: 'muted' })
-  const [outStatus, setOutStatus]   = useState('')
-  const [sortKeys, setSortKeys]     = useState(false)
-  const [indent, setIndent]         = useState<number | string>(4)
+  const [input, setInput]       = useState('')
+  const [output, setOutput]     = useState('')        // raw string for copy
+  const [parsed, setParsed]     = useState<unknown>(null) // for tree
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
+  const [status, setStatus]     = useState<{ msg: string; kind: StatusKind }>({ msg: '', kind: 'muted' })
+  const [outStatus, setOutStatus] = useState('')
+  const [sortKeys, setSortKeys] = useState(false)
+  const [indent, setIndent]     = useState<number | string>(4)
   const copyBtnRef = useRef<HTMLButtonElement>(null)
 
   const deepSort = (val: unknown): unknown => {
@@ -55,26 +39,39 @@ export default function JsonFormatter() {
     const raw = input.trim()
     if (!raw) { setStatus({ msg: 'No input.', kind: 'muted' }); return }
 
-    let parsed: unknown
-    try { parsed = JSON.parse(raw) }
+    let data: unknown
+    try { data = JSON.parse(raw) }
     catch (e) {
       setStatus({ msg: `✖ ${(e as Error).message}`, kind: 'err' })
-      setOutput(''); setHighlight(''); setOutStatus('')
+      setOutput(''); setParsed(null); setCollapsed(new Set()); setOutStatus('')
       return
     }
 
-    const data = sortKeys ? deepSort(parsed) : parsed
+    if (sortKeys) data = deepSort(data)
+
     const indentVal = compact ? undefined : (indent === 'tab' ? '\t' : Number(indent))
     const result = JSON.stringify(data, null, indentVal)
 
     setOutput(result)
-    setHighlight(highlight(result))
-    setStatus({ msg: '✔ Valid JSON', kind: 'ok' })
+    setParsed(data)
+    setCollapsed(new Set()) // expand all on (re)format
 
     const bytes = new TextEncoder().encode(result).length
     const keys  = (result.match(/"[^"]+"\s*:/g) ?? []).length
+    setStatus({ msg: '✔ Valid JSON', kind: 'ok' })
     setOutStatus(`${bytes.toLocaleString()} bytes · ${keys.toLocaleString()} keys`)
   }, [input, sortKeys, indent])
+
+  const toggle = useCallback((path: string) => {
+    setCollapsed(prev => {
+      const next = new Set(prev)
+      next.has(path) ? next.delete(path) : next.add(path)
+      return next
+    })
+  }, [])
+
+  const collapseAll = () => parsed !== null && setCollapsed(collectPaths(parsed))
+  const expandAll   = () => setCollapsed(new Set())
 
   const copy = async () => {
     if (!output) return
@@ -83,6 +80,12 @@ export default function JsonFormatter() {
       copyBtnRef.current.textContent = 'Copied!'
       setTimeout(() => { if (copyBtnRef.current) copyBtnRef.current.textContent = 'Copy' }, 1500)
     }
+  }
+
+  const clear = () => {
+    setInput(''); setOutput(''); setParsed(null)
+    setCollapsed(new Set())
+    setStatus({ msg: '', kind: 'muted' }); setOutStatus('')
   }
 
   return (
@@ -109,9 +112,7 @@ export default function JsonFormatter() {
         <Button onClick={() => format(true)}>Compact</Button>
         <div className={styles.sep} />
         <Button variant="primary" onClick={() => format()}>Format ↵</Button>
-        <Button variant="danger" onClick={() => { setInput(''); setOutput(''); setHighlight(''); setStatus({ msg: '', kind: 'muted' }); setOutStatus('') }}>
-          Clear
-        </Button>
+        <Button variant="danger" onClick={clear}>Clear</Button>
       </div>
 
       <div className={styles.panels}>
@@ -121,7 +122,7 @@ export default function JsonFormatter() {
           actions={
             <>
               <Button onClick={async () => { const t = await navigator.clipboard.readText().catch(() => ''); if (t) setInput(t) }}>Paste</Button>
-              <Button onClick={() => { setInput(SAMPLE); }}>Sample</Button>
+              <Button onClick={() => setInput(SAMPLE)}>Sample</Button>
             </>
           }
         >
@@ -136,12 +137,28 @@ export default function JsonFormatter() {
           <StatusBar message={status.msg} kind={status.kind} />
         </Panel>
 
-        {/* Output */}
-        <Panel title="Output" actions={<Button ref={copyBtnRef} onClick={copy}>Copy</Button>}>
-          <div
-            className={styles.output}
-            dangerouslySetInnerHTML={{ __html: highlighted }}
-          />
+        {/* Output — interactive tree */}
+        <Panel
+          title="Output"
+          actions={
+            <>
+              {parsed !== null && (
+                <>
+                  <Button onClick={collapseAll}>Collapse all</Button>
+                  <Button onClick={expandAll}>Expand all</Button>
+                </>
+              )}
+              <Button ref={copyBtnRef} onClick={copy}>Copy</Button>
+            </>
+          }
+        >
+          {parsed !== null ? (
+            <JsonTree value={parsed} collapsed={collapsed} onToggle={toggle} />
+          ) : (
+            <div className={styles.emptyOutput}>
+              <span>Formatted output will appear here.</span>
+            </div>
+          )}
           <StatusBar message={outStatus} kind="info" />
         </Panel>
       </div>

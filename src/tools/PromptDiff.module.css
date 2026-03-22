@@ -20,11 +20,11 @@
 @media (max-width: 640px) { .inputs { grid-template-columns: 1fr; height: auto; } }
 
 .textarea { flex: 1; width: 100%; font-family: "JetBrains Mono", monospace; font-size: 0.8rem; line-height: 1.6; padding: 12px 14px; background: transparent; color: var(--text); border: none; resize: none; outline: none; }
-.textarea::placeholder { color: #3d4f6b; }
+.textarea::placeholder { color: #4e6280; }
 
 /* Diff output panel */
 .diffOut { flex: 1; overflow: auto; padding: 14px; min-height: 0; }
-.placeholder { color: #3d4f6b; font-size: 0.82rem; }
+.placeholder { color: #4e6280; font-size: 0.82rem; }
 .same { color: var(--green); font-size: 0.82rem; }
 
 kbd { font-family: monospace; background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; font-size: 0.75rem; }

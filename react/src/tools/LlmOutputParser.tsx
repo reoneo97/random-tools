@@ -32,10 +32,19 @@ function extractMessages(data: Record<string, unknown>, fmt: string): Message[] 
     return ((data.choices as unknown[]) ?? []).map((c: unknown) => {
       const choice = c as Record<string, unknown>
       const msg    = (choice.message ?? {}) as Record<string, unknown>
+      let reasoning: string | null = msg.reasoning_content ? String(msg.reasoning_content) : null
+      let content = String(msg.content ?? '')
+      if (!reasoning) {
+        content = content.replace(/<think>([\s\S]*?)<\/think>\s*/i, (_, r) => {
+          reasoning = r.trim()
+          return ''
+        })
+        content = content.trim()
+      }
       return {
         role:         String(msg.role ?? 'assistant'),
-        content:      String(msg.content ?? ''),
-        reasoning:    msg.reasoning_content ? String(msg.reasoning_content) : null,
+        content,
+        reasoning,
         finish_reason: choice.finish_reason ? String(choice.finish_reason) : null,
       }
     })

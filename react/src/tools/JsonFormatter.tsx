@@ -4,8 +4,7 @@ import Button from '../components/Button'
 import StatusBar from '../components/StatusBar'
 import JsonTree, { collectPaths } from './JsonTree'
 import styles from './JsonFormatter.module.css'
-
-type StatusKind = 'ok' | 'err' | 'info' | 'muted'
+import { normalizeQuotes } from '../lib/normalizeQuotes'
 
 const SAMPLE = JSON.stringify({
   name: 'json-formatter',
@@ -40,7 +39,7 @@ export default function JsonFormatter() {
     if (!raw) { setStatus({ msg: 'No input.', kind: 'muted' }); return }
 
     let data: unknown
-    try { data = JSON.parse(raw) }
+    try { data = JSON.parse(normalizeQuotes(raw)) }
     catch (e) {
       setStatus({ msg: `✖ ${(e as Error).message}`, kind: 'err' })
       setOutput(''); setParsed(null); setCollapsed(new Set()); setOutStatus('')

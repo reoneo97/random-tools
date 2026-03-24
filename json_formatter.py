@@ -14,6 +14,7 @@ Examples:
   python3 json_formatter.py --compact data.json
   python3 json_formatter.py --sort-keys data.json
   python3 json_formatter.py --validate data.json
+  echo "{'a':1,'b':2}" | python3 json_formatter.py --lenient
 """
 
 import argparse
@@ -56,6 +57,11 @@ def build_parser():
         help="Only validate the JSON without printing output",
     )
     parser.add_argument(
+        "-l", "--lenient",
+        action="store_true",
+        help="Accept single-quoted strings in addition to double-quoted (non-standard JSON)",
+    )
+    parser.add_argument(
         "-o", "--output",
         metavar="FILE",
         help="Write output to FILE instead of stdout",
@@ -78,7 +84,71 @@ def read_input(file_path):
         return sys.stdin.read()
 
 
-def parse_json(raw):
+def normalize_quotes(raw):
+    """Convert single-quoted strings to double-quoted so standard JSON parsing works.
+
+    Handles:
+    - Single-quoted keys and values -> double-quoted
+    - Unescaped double quotes inside single-quoted strings -> escaped
+    - Escaped single quotes inside single-quoted strings -> unescaped single quotes
+    - Already double-quoted strings are passed through unchanged
+    """
+    result = []
+    i = 0
+    n = len(raw)
+    while i < n:
+        c = raw[i]
+        if c == '"':
+            # Double-quoted string — copy verbatim including its contents
+            result.append(c)
+            i += 1
+            while i < n:
+                c = raw[i]
+                result.append(c)
+                if c == '\\':
+                    i += 1
+                    if i < n:
+                        result.append(raw[i])
+                elif c == '"':
+                    break
+                i += 1
+            i += 1
+        elif c == "'":
+            # Single-quoted string — convert to double-quoted
+            result.append('"')
+            i += 1
+            while i < n:
+                c = raw[i]
+                if c == '\\' and i + 1 < n and raw[i + 1] == "'":
+                    # Escaped single quote \' -> literal single quote (no escape needed in JSON)
+                    result.append("'")
+                    i += 2
+                elif c == '\\':
+                    result.append(c)
+                    i += 1
+                    if i < n:
+                        result.append(raw[i])
+                        i += 1
+                elif c == '"':
+                    # Bare double quote inside single-quoted string -> must escape it
+                    result.append('\\"')
+                    i += 1
+                elif c == "'":
+                    result.append('"')
+                    i += 1
+                    break
+                else:
+                    result.append(c)
+                    i += 1
+        else:
+            result.append(c)
+            i += 1
+    return ''.join(result)
+
+
+def parse_json(raw, lenient=False):
+    if lenient:
+        raw = normalize_quotes(raw)
     try:
         return json.loads(raw)
     except json.JSONDecodeError as e:
@@ -110,7 +180,7 @@ def main():
     args = parser.parse_args()
 
     raw = read_input(args.file)
-    data = parse_json(raw)
+    data = parse_json(raw, lenient=args.lenient)
 
     if args.validate:
         print("Valid JSON.")

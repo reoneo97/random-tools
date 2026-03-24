@@ -7,4 +7,7 @@ export default defineConfig({
     outDir: '../html',
     emptyOutDir: true,
   },
+  test: {
+    environment: 'node',
+  },
 })

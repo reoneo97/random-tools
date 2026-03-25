@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
+import ShortcutsModal from './ShortcutsModal'
 import styles from './Layout.module.css'
 
 const tools = [
@@ -12,6 +14,18 @@ const tools = [
 ]
 
 export default function Layout() {
+  const [showShortcuts, setShowShortcuts] = useState(false)
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) return
+      if (e.key === '?') setShowShortcuts(true)
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
+
   return (
     <div className={styles.shell}>
       <nav className={styles.nav}>
@@ -33,10 +47,16 @@ export default function Layout() {
             </li>
           ))}
         </ul>
+        <button className={styles.shortcutsBtn} onClick={() => setShowShortcuts(true)} title="Keyboard shortcuts (?)">
+          <span className={styles.shortcutsBtnIcon}>⌨</span>
+          Shortcuts
+          <kbd className={styles.shortcutsBtnKbd}>?</kbd>
+        </button>
       </nav>
       <main className={styles.main}>
         <Outlet />
       </main>
+      {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
     </div>
   )
 }

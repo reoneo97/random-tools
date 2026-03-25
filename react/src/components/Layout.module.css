@@ -55,6 +55,39 @@
   flex-shrink: 0;
 }
 
+/* ── Shortcuts button ────────────────────────────────────────────── */
+.shortcutsBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  border-top: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.82rem;
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+.shortcutsBtn:hover { color: var(--text); background: var(--bg3); }
+
+.shortcutsBtnIcon { font-size: 0.9rem; width: 18px; text-align: center; flex-shrink: 0; }
+
+.shortcutsBtnKbd {
+  margin-left: auto;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.68rem;
+  padding: 1px 5px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  color: var(--muted);
+}
+
 /* ── Main content ────────────────────────────────────────────────── */
 .main {
   flex: 1;

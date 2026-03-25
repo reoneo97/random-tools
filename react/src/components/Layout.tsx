@@ -13,8 +13,22 @@ const tools = [
   { path: '/vlm-request-builder', label: 'VLM Request Builder',  icon: '⊕' },
 ]
 
+function getInitialTheme(): 'dark' | 'light' {
+  try {
+    const saved = localStorage.getItem('theme')
+    if (saved === 'light' || saved === 'dark') return saved
+  } catch {}
+  return 'dark'
+}
+
 export default function Layout() {
   const [showShortcuts, setShowShortcuts] = useState(false)
+  const [theme, setTheme] = useState<'dark' | 'light'>(getInitialTheme)
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    try { localStorage.setItem('theme', theme) } catch {}
+  }, [theme])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -25,6 +39,8 @@ export default function Layout() {
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [])
+
+  const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark')
 
   return (
     <div className={styles.shell}>
@@ -54,7 +70,14 @@ export default function Layout() {
         </button>
       </nav>
       <main className={styles.main}>
-        <Outlet />
+        <div className={styles.topbar}>
+          <button className={styles.themeBtn} onClick={toggleTheme} title="Toggle light/dark mode">
+            {theme === 'dark' ? '☀ Light' : '☾ Dark'}
+          </button>
+        </div>
+        <div className={styles.content}>
+          <Outlet />
+        </div>
       </main>
       {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
     </div>

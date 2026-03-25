@@ -1,6 +1,6 @@
 .root { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
 
-.toolbar { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.toolbar { display: flex; align-items: center; gap: 8px; padding: 11px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
 .label { font-size: 0.78rem; color: var(--muted); }
 .sep { width: 1px; height: 18px; background: var(--border); }
 

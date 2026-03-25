@@ -18,7 +18,7 @@ export default function JsonFormatter() {
   const [output, setOutput]     = useState('')        // raw string for copy
   const [parsed, setParsed]     = useState<unknown>(null) // for tree
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
-  const [status, setStatus]     = useState<{ msg: string; kind: StatusKind }>({ msg: '', kind: 'muted' })
+  const [status, setStatus]     = useState<{ msg: string; kind: 'ok' | 'err' | 'info' | 'muted' }>({ msg: '', kind: 'muted' })
   const [outStatus, setOutStatus] = useState('')
   const [sortKeys, setSortKeys] = useState(false)
   const [indent, setIndent]     = useState<number | string>(4)

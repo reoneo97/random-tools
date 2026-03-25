@@ -6,6 +6,7 @@ const tools = [
   { path: '/llm-parser',        label: 'LLM Output Parser',  icon: '⬡' },
   { path: '/llm-eval',          label: 'LLM Evaluator',      icon: '★' },
   { path: '/prompt-diff',       label: 'Prompt Diff',        icon: '±' },
+  { path: '/mermaid-formatter', label: 'Mermaid Formatter',  icon: '◈' },
 ]
 
 export default function Layout() {

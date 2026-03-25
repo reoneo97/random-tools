@@ -23,6 +23,18 @@
 }
 .select:focus { outline: none; border-color: var(--blue); }
 
+.modelInput {
+  font-size: 0.78rem;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--text);
+  padding: 4px 8px;
+  width: 180px;
+}
+.modelInput:focus { outline: none; border-color: var(--blue); }
+
 .sep { width: 1px; height: 18px; background: var(--border); }
 
 .panels {

@@ -9,7 +9,7 @@
 }
 @media (max-width: 900px) { .panels { grid-template-columns: 1fr; } }
 
-.toolbar { padding: 8px 14px; border-bottom: 1px solid var(--border); display: flex; gap: 8px; flex-shrink: 0; }
+.toolbar { padding: 11px 16px; border-bottom: 1px solid var(--border); display: flex; gap: 8px; flex-shrink: 0; }
 
 .textarea {
   flex: 1; width: 100%;

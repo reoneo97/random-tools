@@ -1,15 +1,47 @@
+import { useEffect, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
+import ShortcutsModal from './ShortcutsModal'
 import styles from './Layout.module.css'
 
 const tools = [
-  { path: '/json-formatter',    label: 'JSON Formatter',     icon: '{ }' },
-  { path: '/llm-parser',        label: 'LLM Output Parser',  icon: '⬡' },
-  { path: '/llm-eval',          label: 'LLM Evaluator',      icon: '★' },
-  { path: '/prompt-diff',       label: 'Prompt Diff',        icon: '±' },
-  { path: '/mermaid-formatter', label: 'Mermaid Formatter',  icon: '◈' },
+  { path: '/json-formatter',      label: 'JSON Formatter',       icon: '{ }' },
+  { path: '/llm-parser',          label: 'LLM Output Parser',    icon: '⬡' },
+  { path: '/llm-eval',            label: 'LLM Evaluator',        icon: '★' },
+  { path: '/prompt-diff',         label: 'Prompt Diff',          icon: '±' },
+  { path: '/mermaid-formatter',   label: 'Mermaid Formatter',    icon: '◈' },
+  { path: '/vlm-token-calc',      label: 'VLM Token Calc',       icon: '⊞' },
+  { path: '/vlm-request-builder', label: 'VLM Request Builder',  icon: '⊕' },
 ]
 
+function getInitialTheme(): 'dark' | 'light' {
+  try {
+    const saved = localStorage.getItem('theme')
+    if (saved === 'light' || saved === 'dark') return saved
+  } catch {}
+  return 'dark'
+}
+
 export default function Layout() {
+  const [showShortcuts, setShowShortcuts] = useState(false)
+  const [theme, setTheme] = useState<'dark' | 'light'>(getInitialTheme)
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    try { localStorage.setItem('theme', theme) } catch {}
+  }, [theme])
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) return
+      if (e.key === '?') setShowShortcuts(true)
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
+
+  const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark')
+
   return (
     <div className={styles.shell}>
       <nav className={styles.nav}>
@@ -31,10 +63,23 @@ export default function Layout() {
             </li>
           ))}
         </ul>
+        <button className={styles.shortcutsBtn} onClick={() => setShowShortcuts(true)} title="Keyboard shortcuts (?)">
+          <span className={styles.shortcutsBtnIcon}>⌨</span>
+          Shortcuts
+          <kbd className={styles.shortcutsBtnKbd}>?</kbd>
+        </button>
       </nav>
       <main className={styles.main}>
-        <Outlet />
+        <div className={styles.topbar}>
+          <button className={styles.themeBtn} onClick={toggleTheme} title="Toggle light/dark mode">
+            {theme === 'dark' ? '☀ Light' : '☾ Dark'}
+          </button>
+        </div>
+        <div className={styles.content}>
+          <Outlet />
+        </div>
       </main>
+      {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
     </div>
   )
 }

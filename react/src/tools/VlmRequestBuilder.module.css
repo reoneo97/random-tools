@@ -1,0 +1,169 @@
+.root { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.label { font-size: 0.78rem; color: var(--muted); }
+
+.select {
+  font-size: 0.78rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--text);
+  padding: 4px 8px;
+  cursor: pointer;
+}
+.select:focus { outline: none; border-color: var(--blue); }
+
+.sep { width: 1px; height: 18px; background: var(--border); }
+
+.panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+@media (max-width: 700px) { .panels { grid-template-columns: 1fr; } }
+
+/* Input column */
+.inputCol {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.fieldLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.optional { font-weight: 400; text-transform: none; letter-spacing: 0; color: #4e6280; }
+
+.textarea {
+  width: 100%;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  padding: 10px 12px;
+  background: var(--bg2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  resize: vertical;
+  outline: none;
+}
+.textarea:focus { border-color: var(--blue); }
+.textarea::placeholder { color: #4e6280; }
+
+/* Drop zone */
+.dropZone {
+  border: 2px dashed var(--border);
+  border-radius: 10px;
+  min-height: 130px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  overflow: hidden;
+  padding: 10px;
+}
+.dropZone:hover, .dragging { border-color: var(--blue); background: #1a2540; }
+
+.dropPrompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  pointer-events: none;
+}
+.dropIcon { font-size: 1.8rem; }
+.dropSub  { font-size: 0.72rem; color: #4e6280; }
+
+.hiddenInput { display: none; }
+
+/* Thumbnail grid */
+.thumbGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+}
+.thumbWrap {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.thumb { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+.thumbRemove {
+  position: absolute;
+  top: 2px; right: 2px;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8rem;
+  line-height: 18px;
+  text-align: center;
+  padding: 0;
+}
+.thumbRemove:hover { background: var(--red); }
+.thumbAdd {
+  width: 72px; height: 72px;
+  border: 2px dashed var(--border);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.imgMeta { font-size: 0.75rem; color: var(--muted); }
+
+/* Output */
+.outputPre {
+  flex: 1;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  padding: 14px;
+  color: var(--text);
+  overflow: auto;
+  white-space: pre;
+  margin: 0;
+}
+
+.empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4e6280;
+  font-size: 0.82rem;
+  padding: 20px;
+  text-align: center;
+}

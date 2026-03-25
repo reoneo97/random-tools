@@ -15,12 +15,27 @@
   --red:      #f87171;
 }
 
+[data-theme="light"] {
+  --bg:       #ffffff;
+  --bg2:      #f8fafc;
+  --bg3:      #f1f5f9;
+  --border:   #e2e8f0;
+  --text:     #1e293b;
+  --muted:    #64748b;
+  --blue:     #2563eb;
+  --blue-d:   #1d4ed8;
+  --green:    #16a34a;
+  --purple:   #7c3aed;
+  --orange:   #ea580c;
+  --red:      #dc2626;
+}
+
 html, body, #root {
   height: 100%;
   background: var(--bg);
   color: var(--text);
   font-family: system-ui, sans-serif;
-  font-size: 14px;
+  font-size: 15px;
 }
 
 /* Scrollbars */

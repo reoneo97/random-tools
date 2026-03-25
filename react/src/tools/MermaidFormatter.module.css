@@ -58,18 +58,10 @@
 .preview {
   flex: 1;
   overflow: auto;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 24px;
+  padding: 20px;
   min-height: 0;
 }
 
 .svgWrap {
-  max-width: 100%;
-}
-
-.svgWrap svg {
-  max-width: 100%;
-  height: auto;
+  width: 100%;
 }

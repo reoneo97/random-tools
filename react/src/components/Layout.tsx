@@ -2,11 +2,13 @@ import { NavLink, Outlet } from 'react-router-dom'
 import styles from './Layout.module.css'
 
 const tools = [
-  { path: '/json-formatter',    label: 'JSON Formatter',     icon: '{ }' },
-  { path: '/llm-parser',        label: 'LLM Output Parser',  icon: '⬡' },
-  { path: '/llm-eval',          label: 'LLM Evaluator',      icon: '★' },
-  { path: '/prompt-diff',       label: 'Prompt Diff',        icon: '±' },
-  { path: '/mermaid-formatter', label: 'Mermaid Formatter',  icon: '◈' },
+  { path: '/json-formatter',      label: 'JSON Formatter',       icon: '{ }' },
+  { path: '/llm-parser',          label: 'LLM Output Parser',    icon: '⬡' },
+  { path: '/llm-eval',            label: 'LLM Evaluator',        icon: '★' },
+  { path: '/prompt-diff',         label: 'Prompt Diff',          icon: '±' },
+  { path: '/mermaid-formatter',   label: 'Mermaid Formatter',    icon: '◈' },
+  { path: '/vlm-token-calc',      label: 'VLM Token Calc',       icon: '⊞' },
+  { path: '/vlm-request-builder', label: 'VLM Request Builder',  icon: '⊕' },
 ]
 
 export default function Layout() {

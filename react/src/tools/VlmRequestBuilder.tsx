@@ -221,7 +221,6 @@ export default function VlmRequestBuilder() {
                 {images.length} image{images.length !== 1 ? 's' : ''} · {(totalBytes / 1024).toFixed(1)} KB total
               </div>
             )}
-            <StatusBar message={status.msg} kind={status.kind} />
           </div>
         </Panel>
 
@@ -237,6 +236,7 @@ export default function VlmRequestBuilder() {
           )}
         </Panel>
       </ResizablePanels>
+      <StatusBar message={status.msg} kind={status.kind} />
     </div>
   )
 }

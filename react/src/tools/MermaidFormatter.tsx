@@ -90,56 +90,67 @@ export default function MermaidFormatter() {
 
   const handleRender = () => render(input, theme)
 
-  const copyAsPng = useCallback(async () => {
-    const svgEl = outputRef.current?.querySelector('svg')
-    if (!svgEl) return
+  const buildPngBlob = useCallback((): Promise<Blob | null> => {
+    return new Promise(resolve => {
+      const svgEl = outputRef.current?.querySelector('svg')
+      if (!svgEl) return resolve(null)
 
-    // Clone and strip background fills for transparency
-    const clone = svgEl.cloneNode(true) as SVGSVGElement
-    clone.style.background = 'none'
-    clone.style.backgroundColor = 'transparent'
-    clone.querySelectorAll('[class*="background"], rect.background').forEach(el => el.remove())
-    const firstRect = clone.querySelector(':scope > g > rect:first-child, :scope > rect:first-child')
-    if (firstRect) {
-      const r = firstRect as SVGRectElement
-      if (r.getAttribute('width') === '100%' || r.getAttribute('height') === '100%') r.remove()
-    }
+      const clone = svgEl.cloneNode(true) as SVGSVGElement
+      clone.style.background = 'none'
+      clone.style.backgroundColor = 'transparent'
+      clone.querySelectorAll('[class*="background"], rect.background').forEach(el => el.remove())
+      const firstRect = clone.querySelector(':scope > g > rect:first-child, :scope > rect:first-child')
+      if (firstRect) {
+        const r = firstRect as SVGRectElement
+        if (r.getAttribute('width') === '100%' || r.getAttribute('height') === '100%') r.remove()
+      }
 
-    const vb = svgEl.viewBox.baseVal
-    const w = vb.width > 0 ? vb.width : svgEl.clientWidth
-    const h = vb.height > 0 ? vb.height : svgEl.clientHeight
-    const SCALE = 2
+      const vb = svgEl.viewBox.baseVal
+      const w = vb.width > 0 ? vb.width : svgEl.clientWidth
+      const h = vb.height > 0 ? vb.height : svgEl.clientHeight
+      const SCALE = 2
 
-    const svgStr = new XMLSerializer().serializeToString(clone)
-    const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
+      const svgStr = new XMLSerializer().serializeToString(clone)
+      const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' })
+      const url = URL.createObjectURL(blob)
 
-    const img = new Image()
-    img.onload = () => {
-      const canvas = document.createElement('canvas')
-      canvas.width = Math.ceil(w * SCALE)
-      canvas.height = Math.ceil(h * SCALE)
-      const ctx = canvas.getContext('2d')!
-      ctx.scale(SCALE, SCALE)
-      ctx.drawImage(img, 0, 0, w, h)
-      URL.revokeObjectURL(url)
-      canvas.toBlob(async pngBlob => {
-        if (!pngBlob) return
-        try {
-          await navigator.clipboard.write([new ClipboardItem({ 'image/png': pngBlob })])
-          setStatus({ msg: '✔ PNG copied to clipboard', kind: 'ok' })
-        } catch {
-          // Clipboard API blocked — fall back to download
-          const a = document.createElement('a')
-          a.href = URL.createObjectURL(pngBlob)
-          a.download = 'diagram.png'
-          a.click()
-        }
-      }, 'image/png')
-    }
-    img.onerror = () => { URL.revokeObjectURL(url); setStatus({ msg: '✖ PNG export failed', kind: 'err' }) }
-    img.src = url
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        canvas.width = Math.ceil(w * SCALE)
+        canvas.height = Math.ceil(h * SCALE)
+        const ctx = canvas.getContext('2d')!
+        ctx.scale(SCALE, SCALE)
+        ctx.drawImage(img, 0, 0, w, h)
+        URL.revokeObjectURL(url)
+        canvas.toBlob(pngBlob => resolve(pngBlob), 'image/png')
+      }
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(null) }
+      img.src = url
+    })
   }, [])
+
+  const copyAsPng = useCallback(async () => {
+    const pngBlob = await buildPngBlob()
+    if (!pngBlob) { setStatus({ msg: '✖ PNG export failed', kind: 'err' }); return }
+    try {
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': pngBlob })])
+      setStatus({ msg: '✔ PNG copied to clipboard', kind: 'ok' })
+    } catch {
+      setStatus({ msg: '✖ Clipboard blocked — use Download instead', kind: 'err' })
+    }
+  }, [buildPngBlob])
+
+  const downloadAsPng = useCallback(async () => {
+    const pngBlob = await buildPngBlob()
+    if (!pngBlob) { setStatus({ msg: '✖ PNG export failed', kind: 'err' }); return }
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(pngBlob)
+    a.download = 'diagram.png'
+    a.click()
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000)
+    setStatus({ msg: '✔ PNG downloaded', kind: 'ok' })
+  }, [buildPngBlob])
 
   const handleClear = () => {
     setInput('')
@@ -202,16 +213,16 @@ export default function MermaidFormatter() {
             placeholder="Enter Mermaid diagram syntax…"
             spellCheck={false}
           />
-          <StatusBar message={status.msg} kind={status.kind} />
         </Panel>
 
-        <Panel title="Preview" actions={<Button onClick={copyAsPng}>Copy PNG</Button>}>
+        <Panel title="Preview" actions={<><Button onClick={copyAsPng}>Copy PNG</Button><Button onClick={downloadAsPng}>Download PNG</Button></>}>
           <div className={styles.preview}>
             {/* output injected here as SVG */}
             <div ref={outputRef} className={styles.svgWrap} />
           </div>
         </Panel>
       </ResizablePanels>
+      <StatusBar message={status.msg} kind={status.kind} />
     </div>
   )
 }

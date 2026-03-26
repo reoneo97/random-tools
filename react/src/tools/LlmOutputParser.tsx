@@ -216,7 +216,6 @@ export default function LlmOutputParser() {
             placeholder="Paste a chat/completions API response (OpenAI or Anthropic)…"
             spellCheck={false}
           />
-          <StatusBar message={status.msg} kind={status.kind} />
         </Panel>
 
         <ResizablePanels defaultSplit={65}>
@@ -277,6 +276,7 @@ export default function LlmOutputParser() {
         </Panel>
         </ResizablePanels>
       </ResizablePanels>
+      <StatusBar message={status.msg} kind={status.kind} />
     </div>
   )
 }

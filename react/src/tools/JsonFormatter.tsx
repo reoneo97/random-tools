@@ -134,7 +134,6 @@ export default function JsonFormatter() {
             placeholder="Paste JSON here and click Format, or press Ctrl+Enter…"
             spellCheck={false}
           />
-          <StatusBar message={status.msg} kind={status.kind} />
         </Panel>
 
         {/* Output — interactive tree */}
@@ -159,9 +158,9 @@ export default function JsonFormatter() {
               <span>Formatted output will appear here.</span>
             </div>
           )}
-          <StatusBar message={outStatus} kind="info" />
         </Panel>
       </ResizablePanels>
+      <StatusBar message={status.msg + (outStatus ? ` · ${outStatus}` : '')} kind={status.kind} />
     </div>
   )
 }

@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from 'react'
 import Panel from '../components/Panel'
 import Button from '../components/Button'
 import StatusBar from '../components/StatusBar'
+import ResizablePanels from '../components/ResizablePanels'
 import styles from './VlmRequestBuilder.module.css'
 
 // ── Types ──────────────────────────────────────────────────────────────
@@ -157,7 +158,7 @@ export default function VlmRequestBuilder() {
         <Button variant="danger" onClick={clear}>Clear</Button>
       </div>
 
-      <div className={styles.panels}>
+      <ResizablePanels>
         {/* Left: inputs */}
         <Panel title="Inputs">
           <div className={styles.inputCol}>
@@ -235,7 +236,7 @@ export default function VlmRequestBuilder() {
             <div className={styles.empty}>Add an image or text to generate the request body.</div>
           )}
         </Panel>
-      </div>
+      </ResizablePanels>
     </div>
   )
 }

@@ -3,6 +3,7 @@ import mermaid from 'mermaid'
 import Panel from '../components/Panel'
 import Button from '../components/Button'
 import StatusBar from '../components/StatusBar'
+import ResizablePanels from '../components/ResizablePanels'
 import styles from './MermaidFormatter.module.css'
 
 const SAMPLES: Record<string, string> = {
@@ -43,11 +44,11 @@ const SAMPLES: Record<string, string> = {
 
 let idCounter = 0
 
-mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' })
+mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'loose' })
 
 export default function MermaidFormatter() {
   const [input, setInput]   = useState(SAMPLES.Flowchart)
-  const [theme, setTheme]   = useState<'dark' | 'default' | 'neutral' | 'forest'>('dark')
+  const [theme, setTheme]   = useState<'dark' | 'default' | 'neutral' | 'forest'>('default')
   const [status, setStatus] = useState<{ msg: string; kind: 'ok' | 'err' | 'muted' }>({ msg: 'Paste Mermaid syntax and click Render.', kind: 'muted' })
   const outputRef = useRef<HTMLDivElement>(null)
   const prevTheme = useRef(theme)
@@ -88,6 +89,57 @@ export default function MermaidFormatter() {
   }, [theme, input, render])
 
   const handleRender = () => render(input, theme)
+
+  const copyAsPng = useCallback(async () => {
+    const svgEl = outputRef.current?.querySelector('svg')
+    if (!svgEl) return
+
+    // Clone and strip background fills for transparency
+    const clone = svgEl.cloneNode(true) as SVGSVGElement
+    clone.style.background = 'none'
+    clone.style.backgroundColor = 'transparent'
+    clone.querySelectorAll('[class*="background"], rect.background').forEach(el => el.remove())
+    const firstRect = clone.querySelector(':scope > g > rect:first-child, :scope > rect:first-child')
+    if (firstRect) {
+      const r = firstRect as SVGRectElement
+      if (r.getAttribute('width') === '100%' || r.getAttribute('height') === '100%') r.remove()
+    }
+
+    const vb = svgEl.viewBox.baseVal
+    const w = vb.width > 0 ? vb.width : svgEl.clientWidth
+    const h = vb.height > 0 ? vb.height : svgEl.clientHeight
+    const SCALE = 2
+
+    const svgStr = new XMLSerializer().serializeToString(clone)
+    const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.ceil(w * SCALE)
+      canvas.height = Math.ceil(h * SCALE)
+      const ctx = canvas.getContext('2d')!
+      ctx.scale(SCALE, SCALE)
+      ctx.drawImage(img, 0, 0, w, h)
+      URL.revokeObjectURL(url)
+      canvas.toBlob(async pngBlob => {
+        if (!pngBlob) return
+        try {
+          await navigator.clipboard.write([new ClipboardItem({ 'image/png': pngBlob })])
+          setStatus({ msg: '✔ PNG copied to clipboard', kind: 'ok' })
+        } catch {
+          // Clipboard API blocked — fall back to download
+          const a = document.createElement('a')
+          a.href = URL.createObjectURL(pngBlob)
+          a.download = 'diagram.png'
+          a.click()
+        }
+      }, 'image/png')
+    }
+    img.onerror = () => { URL.revokeObjectURL(url); setStatus({ msg: '✖ PNG export failed', kind: 'err' }) }
+    img.src = url
+  }, [])
 
   const handleClear = () => {
     setInput('')
@@ -140,7 +192,7 @@ export default function MermaidFormatter() {
         ))}
       </div>
 
-      <div className={styles.panels}>
+      <ResizablePanels>
         <Panel title="Mermaid Source">
           <textarea
             className={styles.textarea}
@@ -153,13 +205,13 @@ export default function MermaidFormatter() {
           <StatusBar message={status.msg} kind={status.kind} />
         </Panel>
 
-        <Panel title="Preview">
+        <Panel title="Preview" actions={<Button onClick={copyAsPng}>Copy PNG</Button>}>
           <div className={styles.preview}>
             {/* output injected here as SVG */}
             <div ref={outputRef} className={styles.svgWrap} />
           </div>
         </Panel>
-      </div>
+      </ResizablePanels>
     </div>
   )
 }

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Panel from '../components/Panel'
 import Button from '../components/Button'
 import StatusBar from '../components/StatusBar'
+import ResizablePanels from '../components/ResizablePanels'
 import { renderMarkdown } from '../lib/markdown'
 import { normalizeQuotes } from '../lib/normalizeQuotes'
 import styles from './LlmOutputParser.module.css'
@@ -195,7 +196,7 @@ export default function LlmOutputParser() {
 
   return (
     <div className={styles.root}>
-      <div className={styles.panels}>
+      <ResizablePanels defaultSplit={35}>
         {/* Input */}
         <Panel title="Raw JSON" actions={
           <>
@@ -218,6 +219,7 @@ export default function LlmOutputParser() {
           <StatusBar message={status.msg} kind={status.kind} />
         </Panel>
 
+        <ResizablePanels defaultSplit={65}>
         {/* Rendered output */}
         <Panel title="Rendered Output" actions={
           <Button onClick={() => navigator.clipboard.writeText(messages.map(m => m.content).join('\n\n'))}>Copy text</Button>
@@ -273,7 +275,8 @@ export default function LlmOutputParser() {
             ))}
           </div>
         </Panel>
-      </div>
+        </ResizablePanels>
+      </ResizablePanels>
     </div>
   )
 }

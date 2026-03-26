@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import Panel from '../components/Panel'
 import Button from '../components/Button'
+import ResizablePanels from '../components/ResizablePanels'
 import styles from './LlmEval.module.css'
 
 // ── Criteria ──────────────────────────────────────────────────────────
@@ -171,65 +172,68 @@ export default function LlmEval() {
 
       {/* ── Score ── */}
       {tab === 'score' && (
-        <div className={styles.split3}>
+        <ResizablePanels defaultSplit={33}>
           <Panel title="Response">
             <textarea className={styles.textarea} value={sInput} onChange={e => setSInput(e.target.value)}
               placeholder="Paste the LLM response to evaluate…" spellCheck={false} />
           </Panel>
 
-          <Panel title="Scoring Criteria">
-            <div className={styles.scroll}>
-              <div className={styles.criteriaList}>
-                {CRITERIA.map(c => (
-                  <ScoreSlider key={c.id} label={c.label} desc={c.desc} value={sScores[c.id]}
-                    onChange={v => setSScores(prev => ({ ...prev, [c.id]: v }))} />
-                ))}
-              </div>
-              <div className={styles.sectionTitle} style={{ marginTop: 20 }}>Evaluator Notes</div>
-              <textarea className={styles.notesArea} value={sNotes} onChange={e => setSNotes(e.target.value)}
-                placeholder="Optional notes or justification…" />
-            </div>
-          </Panel>
-
-          <Panel title="Summary" actions={<Button onClick={exportScore}>Export JSON</Button>}>
-            <div className={styles.scroll}>
-              <div className={styles.scoreCard}>
-                <div className={styles.bigScore} style={{ color: scoreColor(sAvg) }}>{sRounded}</div>
-                <div className={styles.scoreLabel}>Overall Score / 10</div>
-                <div className={styles.verdictBadge}>{verdictLabel(sAvg)}</div>
-              </div>
-
-              <div className={styles.sectionTitle}>Breakdown</div>
-              {CRITERIA.map(c => (
-                <div key={c.id} className={styles.breakdownRow}>
-                  <div className={styles.breakdownMeta}>
-                    <span>{c.label}</span>
-                    <span style={{ color: scoreColor(sScores[c.id]), fontWeight: 700 }}>{sScores[c.id]}/10</span>
-                  </div>
-                  <div className={styles.barTrack}>
-                    <div className={styles.barFill} style={{ width: `${sScores[c.id] * 10}%`, background: scoreColor(sScores[c.id]) }} />
-                  </div>
+          <ResizablePanels defaultSplit={55}>
+            <Panel title="Scoring Criteria">
+              <div className={styles.scroll}>
+                <div className={styles.criteriaList}>
+                  {CRITERIA.map(c => (
+                    <ScoreSlider key={c.id} label={c.label} desc={c.desc} value={sScores[c.id]}
+                      onChange={v => setSScores(prev => ({ ...prev, [c.id]: v }))} />
+                  ))}
                 </div>
-              ))}
+                <div className={styles.sectionTitle} style={{ marginTop: 20 }}>Evaluator Notes</div>
+                <textarea className={styles.notesArea} value={sNotes} onChange={e => setSNotes(e.target.value)}
+                  placeholder="Optional notes or justification…" />
+              </div>
+            </Panel>
 
-              {sExport && (
-                <>
-                  <div className={styles.sectionTitle} style={{ marginTop: 16 }}>Export</div>
-                  <pre className={styles.exportPre}>{sExport}</pre>
-                  <Button style={{ marginTop: 8 }} onClick={() => navigator.clipboard.writeText(sExport)}>Copy JSON</Button>
-                </>
-              )}
-            </div>
-          </Panel>
-        </div>
+            <Panel title="Summary" actions={<Button onClick={exportScore}>Export JSON</Button>}>
+              <div className={styles.scroll}>
+                <div className={styles.scoreCard}>
+                  <div className={styles.bigScore} style={{ color: scoreColor(sAvg) }}>{sRounded}</div>
+                  <div className={styles.scoreLabel}>Overall Score / 10</div>
+                  <div className={styles.verdictBadge}>{verdictLabel(sAvg)}</div>
+                </div>
+
+                <div className={styles.sectionTitle}>Breakdown</div>
+                {CRITERIA.map(c => (
+                  <div key={c.id} className={styles.breakdownRow}>
+                    <div className={styles.breakdownMeta}>
+                      <span>{c.label}</span>
+                      <span style={{ color: scoreColor(sScores[c.id]), fontWeight: 700 }}>{sScores[c.id]}/10</span>
+                    </div>
+                    <div className={styles.barTrack}>
+                      <div className={styles.barFill} style={{ width: `${sScores[c.id] * 10}%`, background: scoreColor(sScores[c.id]) }} />
+                    </div>
+                  </div>
+                ))}
+
+                {sExport && (
+                  <>
+                    <div className={styles.sectionTitle} style={{ marginTop: 16 }}>Export</div>
+                    <pre className={styles.exportPre}>{sExport}</pre>
+                    <Button style={{ marginTop: 8 }} onClick={() => navigator.clipboard.writeText(sExport)}>Copy JSON</Button>
+                  </>
+                )}
+              </div>
+            </Panel>
+          </ResizablePanels>
+        </ResizablePanels>
       )}
 
       {/* ── A/B Compare ── */}
       {tab === 'compare' && (
-        <div className={styles.split3}>
+        <ResizablePanels defaultSplit={33}>
           <Panel title="Response A" titleColor="#60a5fa">
             <textarea className={styles.textarea} value={abA} onChange={e => setAbA(e.target.value)} placeholder="Paste Response A…" spellCheck={false} />
           </Panel>
+          <ResizablePanels defaultSplit={55}>
           <Panel title="Response B" titleColor="#f472b6">
             <textarea className={styles.textarea} value={abB} onChange={e => setAbB(e.target.value)} placeholder="Paste Response B…" spellCheck={false} />
           </Panel>
@@ -269,12 +273,13 @@ export default function LlmEval() {
               )}
             </div>
           </Panel>
-        </div>
+          </ResizablePanels>
+        </ResizablePanels>
       )}
 
       {/* ── Rubric ── */}
       {tab === 'rubric' && (
-        <div className={styles.split2}>
+        <ResizablePanels>
           <Panel title="Response">
             <textarea className={styles.textarea} value={rInput} onChange={e => setRInput(e.target.value)}
               placeholder="Paste the LLM response to evaluate…" spellCheck={false} />
@@ -317,7 +322,7 @@ export default function LlmEval() {
               )}
             </div>
           </Panel>
-        </div>
+        </ResizablePanels>
       )}
     </div>
   )

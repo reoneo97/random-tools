@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from 'react'
 import Panel from '../components/Panel'
 import Button from '../components/Button'
 import StatusBar from '../components/StatusBar'
+import ResizablePanels from '../components/ResizablePanels'
 import styles from './VlmTokenCalc.module.css'
 
 // ── Token calculation logic ────────────────────────────────────────────
@@ -137,7 +138,7 @@ export default function VlmTokenCalc() {
         </Button>
       </div>
 
-      <div className={styles.panels}>
+      <ResizablePanels>
         {/* Drop zone */}
         <Panel title="Image Input">
           <div
@@ -199,7 +200,7 @@ export default function VlmTokenCalc() {
             <div className={styles.empty}>Upload an image to see token estimates.</div>
           )}
         </Panel>
-      </div>
+      </ResizablePanels>
     </div>
   )
 }

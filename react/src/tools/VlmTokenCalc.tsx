@@ -159,7 +159,6 @@ export default function VlmTokenCalc() {
             )}
           </div>
           <input ref={fileRef} type="file" accept="image/*" className={styles.hiddenInput} onChange={onFileChange} />
-          <StatusBar message={status.msg} kind={status.kind} />
         </Panel>
 
         {/* Results */}
@@ -201,6 +200,7 @@ export default function VlmTokenCalc() {
           )}
         </Panel>
       </ResizablePanels>
+      <StatusBar message={status.msg} kind={status.kind} />
     </div>
   )
 }

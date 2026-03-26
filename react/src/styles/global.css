@@ -13,6 +13,42 @@
   --purple:   #a78bfa;
   --orange:   #fb923c;
   --red:      #f87171;
+
+  /* Syntax highlighting */
+  --syntax-key:  #60a5fa;
+  --syntax-str:  #34d399;
+  --syntax-num:  #fb923c;
+  --syntax-bool: #a78bfa;
+
+  /* Code blocks */
+  --code-bg:       #1e293b;
+  --code-fg:       #34d399;
+  --pre-bg:        #111827;
+  --blockquote-bg: #131c2e;
+
+  /* Role pills */
+  --role-asst-bg: #1e3a5f;  --role-asst-fg: #60a5fa;
+  --role-user-bg: #14532d;  --role-user-fg: #4ade80;
+  --role-sys-bg:  #3b1f00;  --role-sys-fg:  #fb923c;
+
+  /* Reasoning block */
+  --reasoning-bg:  #1a1030;
+  --reasoning-hdr: #221540;
+  --reasoning-hdr-hover: #2a1a52;
+  --reasoning-fg:  #c4b5fd;
+
+  /* Diffs */
+  --diff-ins-bg: #14532d;  --diff-ins-fg: #4ade80;
+  --diff-del-bg: #7f1d1d;  --diff-del-fg: #fca5a5;
+
+  /* Interactive states */
+  --drop-active-bg:     #1a2540;
+  --rubric-pass-bg:     #052e1e;
+  --rubric-pass-border: #065f46;
+  --rubric-fail-bg:     #2a0a0a;
+  --rubric-fail-border: #7f1d1d;
+  --winner-a-bg: #1e3a5f;  --winner-a-fg: #60a5fa;
+  --winner-b-bg: #4a1040;  --winner-b-fg: #f472b6;
 }
 
 [data-theme="light"] {
@@ -28,6 +64,42 @@
   --purple:   #7c3aed;
   --orange:   #ea580c;
   --red:      #dc2626;
+
+  /* Syntax highlighting */
+  --syntax-key:  #1d4ed8;
+  --syntax-str:  #15803d;
+  --syntax-num:  #c2410c;
+  --syntax-bool: #7c3aed;
+
+  /* Code blocks */
+  --code-bg:       #e2e8f0;
+  --code-fg:       #15803d;
+  --pre-bg:        #f1f5f9;
+  --blockquote-bg: #f1f5f9;
+
+  /* Role pills */
+  --role-asst-bg: #dbeafe;  --role-asst-fg: #1d4ed8;
+  --role-user-bg: #dcfce7;  --role-user-fg: #15803d;
+  --role-sys-bg:  #ffedd5;  --role-sys-fg:  #c2410c;
+
+  /* Reasoning block */
+  --reasoning-bg:  #f5f3ff;
+  --reasoning-hdr: #ede9fe;
+  --reasoning-hdr-hover: #ddd6fe;
+  --reasoning-fg:  #6d28d9;
+
+  /* Diffs */
+  --diff-ins-bg: #dcfce7;  --diff-ins-fg: #15803d;
+  --diff-del-bg: #fee2e2;  --diff-del-fg: #b91c1c;
+
+  /* Interactive states */
+  --drop-active-bg:     #eff6ff;
+  --rubric-pass-bg:     #f0fdf4;
+  --rubric-pass-border: #16a34a;
+  --rubric-fail-bg:     #fef2f2;
+  --rubric-fail-border: #dc2626;
+  --winner-a-bg: #dbeafe;  --winner-a-fg: #1d4ed8;
+  --winner-b-bg: #fdf4ff;  --winner-b-fg: #9333ea;
 }
 
 html, body, #root {

@@ -36,14 +36,14 @@ kbd { font-family: monospace; background: var(--bg3); border: 1px solid var(--bo
   white-space: pre-wrap;
   word-break: break-word;
 }
-.diffContent :global(.ins) { background: #14532d; color: #4ade80; border-radius: 3px; padding: 0 2px; }
-.diffContent :global(.del) { background: #7f1d1d; color: #fca5a5; border-radius: 3px; padding: 0 2px; text-decoration: line-through; }
+.diffContent :global(.ins) { background: var(--diff-ins-bg); color: var(--diff-ins-fg); border-radius: 3px; padding: 0 2px; }
+.diffContent :global(.del) { background: var(--diff-del-bg); color: var(--diff-del-fg); border-radius: 3px; padding: 0 2px; text-decoration: line-through; }
 
 /* Line diff */
 .lineMode { white-space: pre; }
-.diffContent:global(.lineMode) :global(.line-ins) { background: #14532d33; color: #4ade80; padding: 1px 8px; display: block; }
-.diffContent :global(.line-ins) { background: #14532d33; color: #4ade80; padding: 1px 8px; display: block; }
-.diffContent :global(.line-del) { background: #7f1d1d33; color: #fca5a5; padding: 1px 8px; display: block; }
+.diffContent:global(.lineMode) :global(.line-ins) { background: color-mix(in srgb, var(--diff-ins-bg) 30%, transparent); color: var(--diff-ins-fg); padding: 1px 8px; display: block; }
+.diffContent :global(.line-ins) { background: color-mix(in srgb, var(--diff-ins-bg) 30%, transparent); color: var(--diff-ins-fg); padding: 1px 8px; display: block; }
+.diffContent :global(.line-del) { background: color-mix(in srgb, var(--diff-del-bg) 30%, transparent); color: var(--diff-del-fg); padding: 1px 8px; display: block; }
 .diffContent :global(.line-eq)  { color: var(--muted); padding: 1px 8px; display: block; }
 
 /* Stats */

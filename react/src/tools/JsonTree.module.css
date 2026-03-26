@@ -43,16 +43,16 @@
 }
 
 /* Syntax colours */
-.key   { color: #60a5fa; }
+.key   { color: var(--syntax-key); }
 .punct { color: var(--muted); }
-.str   { color: #34d399; }
-.num   { color: #fb923c; }
-.bool  { color: #a78bfa; }
-.nul   { color: #a78bfa; font-style: italic; }
+.str   { color: var(--syntax-str); }
+.num   { color: var(--syntax-num); }
+.bool  { color: var(--syntax-bool); }
+.nul   { color: var(--syntax-bool); font-style: italic; }
 
 /* Collapsed summary e.g. " 3 keys " */
 .summary {
-  color: #4e6280;
+  color: var(--muted);
   font-style: italic;
   font-size: 0.75rem;
 }

@@ -10,14 +10,13 @@
 .modeActive { background: var(--blue-d) !important; color: #fff !important; }
 
 .inputs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
   flex-shrink: 0;
   height: 35%;
   min-height: 160px;
   border-bottom: 1px solid var(--border);
+  overflow: hidden;
 }
-@media (max-width: 640px) { .inputs { grid-template-columns: 1fr; height: auto; } }
 
 .textarea { flex: 1; width: 100%; font-family: "JetBrains Mono", monospace; font-size: 0.8rem; line-height: 1.6; padding: 12px 14px; background: transparent; color: var(--text); border: none; resize: none; outline: none; }
 .textarea::placeholder { color: #4e6280; }

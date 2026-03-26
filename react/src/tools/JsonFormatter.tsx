@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from 'react'
 import Panel from '../components/Panel'
 import Button from '../components/Button'
 import StatusBar from '../components/StatusBar'
+import ResizablePanels from '../components/ResizablePanels'
 import JsonTree, { collectPaths } from './JsonTree'
 import styles from './JsonFormatter.module.css'
 import { normalizeQuotes } from '../lib/normalizeQuotes'
@@ -114,7 +115,7 @@ export default function JsonFormatter() {
         <Button variant="danger" onClick={clear}>Clear</Button>
       </div>
 
-      <div className={styles.panels}>
+      <ResizablePanels>
         {/* Input */}
         <Panel
           title="Input"
@@ -160,7 +161,7 @@ export default function JsonFormatter() {
           )}
           <StatusBar message={outStatus} kind="info" />
         </Panel>
-      </div>
+      </ResizablePanels>
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import Panel from '../components/Panel'
 import Button from '../components/Button'
+import ResizablePanels from '../components/ResizablePanels'
 import { diffWords, diffLines, type DiffOp } from '../lib/diff'
 import styles from './PromptDiff.module.css'
 
@@ -88,16 +89,18 @@ export default function PromptDiff() {
       </div>
 
       <div className={styles.inputs}>
-        <Panel title="Prompt A (original)" titleColor="#60a5fa">
-          <textarea className={styles.textarea} value={a} onChange={e => { setA(e.target.value); setDiffed(false) }}
-            onKeyDown={e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); run() } }}
-            placeholder="Paste original prompt…" spellCheck={false} />
-        </Panel>
-        <Panel title="Prompt B (revised)" titleColor="#f472b6">
-          <textarea className={styles.textarea} value={b} onChange={e => { setB(e.target.value); setDiffed(false) }}
-            onKeyDown={e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); run() } }}
-            placeholder="Paste revised prompt…" spellCheck={false} />
-        </Panel>
+        <ResizablePanels>
+          <Panel title="Prompt A (original)" titleColor="#60a5fa">
+            <textarea className={styles.textarea} value={a} onChange={e => { setA(e.target.value); setDiffed(false) }}
+              onKeyDown={e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); run() } }}
+              placeholder="Paste original prompt…" spellCheck={false} />
+          </Panel>
+          <Panel title="Prompt B (revised)" titleColor="#f472b6">
+            <textarea className={styles.textarea} value={b} onChange={e => { setB(e.target.value); setDiffed(false) }}
+              onKeyDown={e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); run() } }}
+              placeholder="Paste revised prompt…" spellCheck={false} />
+          </Panel>
+        </ResizablePanels>
       </div>
 
       <Panel title="Diff Output">

@@ -62,7 +62,16 @@ export default function MermaidFormatter() {
       mermaid.initialize({ startOnLoad: false, theme: t, securityLevel: 'loose' })
       const id  = `mermaid-svg-${++idCounter}`
       const { svg } = await mermaid.render(id, code)
-      if (outputRef.current) outputRef.current.innerHTML = svg
+      if (outputRef.current) {
+        outputRef.current.innerHTML = svg
+        const svgEl = outputRef.current.querySelector('svg')
+        if (svgEl) {
+          svgEl.removeAttribute('width')
+          svgEl.removeAttribute('height')
+          svgEl.style.width = '100%'
+          svgEl.style.height = 'auto'
+        }
+      }
       setStatus({ msg: '✔ Rendered successfully', kind: 'ok' })
     } catch (e) {
       if (outputRef.current) outputRef.current.innerHTML = ''

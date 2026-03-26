@@ -19,7 +19,12 @@ type OaiDetail = 'auto' | 'low' | 'high'
 
 // ── JSON builders ──────────────────────────────────────────────────────
 
-function buildOpenAI(images: ImageItem[], text: string, detail: OaiDetail, systemPrompt: string) {
+const DEFAULT_MODEL: Record<Format, string> = {
+  openai:    'gpt-4o',
+  anthropic: 'claude-opus-4-6',
+}
+
+function buildOpenAI(images: ImageItem[], text: string, detail: OaiDetail, systemPrompt: string, model: string) {
   const content: unknown[] = images.map(img => ({
     type: 'image_url',
     image_url: { url: img.dataUrl, detail },
@@ -31,13 +36,13 @@ function buildOpenAI(images: ImageItem[], text: string, detail: OaiDetail, syste
   messages.push({ role: 'user', content })
 
   return {
-    model: 'gpt-4o',
+    model: model || DEFAULT_MODEL.openai,
     messages,
     max_tokens: 1024,
   }
 }
 
-function buildAnthropic(images: ImageItem[], text: string, systemPrompt: string) {
+function buildAnthropic(images: ImageItem[], text: string, systemPrompt: string, model: string) {
   const content: unknown[] = images.map(img => ({
     type: 'image',
     source: {
@@ -49,7 +54,7 @@ function buildAnthropic(images: ImageItem[], text: string, systemPrompt: string)
   if (text.trim()) content.push({ type: 'text', text: text.trim() })
 
   const body: Record<string, unknown> = {
-    model: 'claude-opus-4-6',
+    model: model || DEFAULT_MODEL.anthropic,
     max_tokens: 1024,
     messages: [{ role: 'user', content }],
   }
@@ -68,6 +73,7 @@ export default function VlmRequestBuilder() {
   const [text, setText]       = useState('')
   const [system, setSystem]   = useState('')
   const [format, setFormat]   = useState<Format>('openai')
+  const [model, setModel]     = useState(DEFAULT_MODEL.openai)
   const [detail, setDetail]   = useState<OaiDetail>('auto')
   const [status, setStatus]   = useState<{ msg: string; kind: 'ok' | 'err' | 'muted' }>({ msg: '', kind: 'muted' })
   const [dragging, setDragging] = useState(false)
@@ -99,8 +105,8 @@ export default function VlmRequestBuilder() {
   const outputJson = images.length || text.trim()
     ? JSON.stringify(
         format === 'openai'
-          ? buildOpenAI(images, text, detail, system)
-          : buildAnthropic(images, text, system),
+          ? buildOpenAI(images, text, detail, system, model)
+          : buildAnthropic(images, text, system, model),
         null, 2
       )
     : ''
@@ -125,10 +131,18 @@ export default function VlmRequestBuilder() {
       {/* Toolbar */}
       <div className={styles.toolbar}>
         <span className={styles.label}>Format</span>
-        <select className={styles.select} value={format} onChange={e => setFormat(e.target.value as Format)}>
+        <select className={styles.select} value={format} onChange={e => { const f = e.target.value as Format; setFormat(f); setModel(DEFAULT_MODEL[f]) }}>
           <option value="openai">OpenAI</option>
           <option value="anthropic">Anthropic</option>
         </select>
+        <span className={styles.label}>Model</span>
+        <input
+          className={styles.modelInput}
+          value={model}
+          onChange={e => setModel(e.target.value)}
+          placeholder={DEFAULT_MODEL[format]}
+          spellCheck={false}
+        />
         {format === 'openai' && (
           <>
             <span className={styles.label}>Detail</span>

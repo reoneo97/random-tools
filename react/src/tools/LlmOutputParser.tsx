@@ -3,6 +3,7 @@ import Panel from '../components/Panel'
 import Button from '../components/Button'
 import StatusBar from '../components/StatusBar'
 import { renderMarkdown } from '../lib/markdown'
+import { normalizeQuotes } from '../lib/normalizeQuotes'
 import styles from './LlmOutputParser.module.css'
 
 // ── Types ─────────────────────────────────────────────────────────────
@@ -124,6 +125,40 @@ const SAMPLE_ANT = JSON.stringify({
   usage: { input_tokens: 22, output_tokens: 267, cache_read_input_tokens: 1024, cache_creation_input_tokens: 0 }
 }, null, 2)
 
+// ── Nested JSON unwrapping ────────────────────────────────────────────
+// Some APIs wrap the LLM response as a JSON string inside another object
+// e.g. { result: { content: [{ result: "{\"choices\":[...]}" }] } }
+// Recursively search for a string value that is itself valid JSON matching
+// a known LLM format, and return that inner object.
+
+function unwrapNestedLlmResponse(val: unknown): Record<string, unknown> | null {
+  if (typeof val === 'string') {
+    try {
+      const inner = JSON.parse(val)
+      if (inner && typeof inner === 'object' && !Array.isArray(inner)) {
+        if (detectFormat(inner as Record<string, unknown>) !== 'unknown')
+          return inner as Record<string, unknown>
+      }
+    } catch {}
+    return null
+  }
+  if (Array.isArray(val)) {
+    for (const item of val) {
+      const found = unwrapNestedLlmResponse(item)
+      if (found) return found
+    }
+    return null
+  }
+  if (val && typeof val === 'object') {
+    for (const v of Object.values(val as Record<string, unknown>)) {
+      const found = unwrapNestedLlmResponse(v)
+      if (found) return found
+    }
+    return null
+  }
+  return null
+}
+
 // ── Component ─────────────────────────────────────────────────────────
 
 export default function LlmOutputParser() {
@@ -137,10 +172,14 @@ export default function LlmOutputParser() {
     const trimmed = raw.trim()
     if (!trimmed) { setStatus({ msg: 'No input.', kind: 'muted' }); return }
     let data: Record<string, unknown>
-    try { data = JSON.parse(trimmed) }
+    try { data = JSON.parse(normalizeQuotes(trimmed)) }
     catch (e) { setStatus({ msg: `✖ ${(e as Error).message}`, kind: 'err' }); return }
 
-    const fmt  = detectFormat(data)
+    let fmt = detectFormat(data)
+    if (fmt === 'unknown') {
+      const inner = unwrapNestedLlmResponse(data)
+      if (inner) { data = inner; fmt = detectFormat(data) }
+    }
     const msgs = extractMessages(data, fmt)
     setMsgs(msgs)
     setStats(buildStats(data, fmt, msgs))

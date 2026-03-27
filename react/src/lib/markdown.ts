@@ -1,10 +1,26 @@
-function esc(s: string) {
+import katex from 'katex'
+
+function esc(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
+function renderKatex(tex: string, displayMode: boolean): string {
+  try {
+    return katex.renderToString(tex, { displayMode, throwOnError: false, output: 'html' })
+  } catch {
+    return `<span style="color:var(--red);font-family:monospace">${esc(tex)}</span>`
+  }
+}
+
+// Sentinels — control chars that won't appear in user content and survive esc()
+const B = '\x02', E = '\x03'
+const SOLO_TOKEN = new RegExp(`^${B}(\\d+)${E}$`)
+const ALL_TOKENS  = new RegExp(`${B}(\\d+)${E}`, 'g')
+
 function inline(text: string): string {
+  // LaTeX/code stash tokens (\x02N\x03) survive esc() and all patterns below
+  // since esc() only touches &<> and none of the regexes match control chars.
   return esc(text)
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
     .replace(/~~(.+?)~~/g, '<del>$1</del>')
@@ -12,23 +28,44 @@ function inline(text: string): string {
 }
 
 export function renderMarkdown(text: string): string {
-  const lines = text.split('\n')
+  const stash: string[] = []
+  const stashHtml = (html: string) => {
+    const i = stash.length
+    stash.push(html)
+    return `${B}${i}${E}`
+  }
+
+  // Step 1 — extract code first so LaTeX inside code is never rendered
+  // Fenced code blocks
+  let t = text.replace(/```(\w*)\n([\s\S]*?)```/g, (_, _lang, code) =>
+    stashHtml(`<pre><code>${esc(code.trimEnd())}</code></pre>`)
+  )
+  // Inline code spans
+  t = t.replace(/`([^`\n]+)`/g, (_, code) =>
+    stashHtml(`<code>${esc(code)}</code>`)
+  )
+
+  // Step 2 — extract LaTeX (code regions are now protected as stash tokens)
+  // Block math $$...$$
+  t = t.replace(/\$\$([\s\S]+?)\$\$/g, (_, tex) =>
+    stashHtml(`<div class="katex-block">${renderKatex(tex.trim(), true)}</div>`)
+  )
+  // Inline math $...$
+  t = t.replace(/\$([^\n$]+?)\$/g, (_, tex) =>
+    stashHtml(renderKatex(tex.trim(), false))
+  )
+
+  // Step 3 — process markdown line by line
+  const lines = t.split('\n')
   let html = ''
   let i = 0
 
   while (i < lines.length) {
     const line = lines[i]
 
-    // Fenced code block
-    const fence = line.match(/^```(\w*)/)
-    if (fence) {
-      const lang = fence[1] || ''
-      const code: string[] = []
-      i++
-      while (i < lines.length && !lines[i].startsWith('```')) { code.push(lines[i]); i++ }
-      html += `<pre><code>${esc(code.join('\n'))}</code></pre>`
-      i++; continue
-    }
+    // Block-level stash item — emit directly without wrapping
+    const bm = line.trim().match(SOLO_TOKEN)
+    if (bm) { html += stash[Number(bm[1])]; i++; continue }
 
     const h1 = line.match(/^# (.+)/);   if (h1) { html += `<h1>${inline(h1[1])}</h1>`; i++; continue }
     const h2 = line.match(/^## (.+)/);  if (h2) { html += `<h2>${inline(h2[1])}</h2>`; i++; continue }
@@ -52,5 +89,9 @@ export function renderMarkdown(text: string): string {
     html += `<p>${inline(line)}</p>`
     i++
   }
+
+  // Step 4 — restore stash tokens that ended up in inline contexts
+  html = html.replace(ALL_TOKENS, (_, idx) => stash[Number(idx)])
+
   return html
 }

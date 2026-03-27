@@ -111,7 +111,7 @@ function buildStats(data: Record<string, unknown>, fmt: string, messages: Messag
 const SAMPLE_OAI = JSON.stringify({
   id: 'chatcmpl-ABC123', object: 'chat.completion', created: 1741478400, model: 'gpt-4o-2024-08-06',
   choices: [{ index: 0, message: { role: 'assistant', reasoning_content: 'The user wants merge sort explained. I should cover concept, complexity, and a Python example.',
-    content: '# Merge Sort\n\nMerge sort is a **divide-and-conquer** algorithm with O(n log n) complexity.\n\n## Steps\n\n1. Split the array in half\n2. Recursively sort each half\n3. Merge the sorted halves\n\n```python\ndef merge_sort(arr):\n    if len(arr) <= 1:\n        return arr\n    mid = len(arr) // 2\n    return merge(merge_sort(arr[:mid]), merge_sort(arr[mid:]))\n```\n\n> Merge sort is **stable** and great for external sorting.\n\nTime: **O(n log n)** · Space: **O(n)**'
+    content: '# Merge Sort\n\nMerge sort is a **divide-and-conquer** algorithm with $O(n \\log n)$ complexity.\n\n## Steps\n\n1. Split the array in half\n2. Recursively sort each half\n3. Merge the sorted halves\n\n```python\ndef merge_sort(arr):\n    if len(arr) <= 1:\n        return arr\n    mid = len(arr) // 2\n    return merge(merge_sort(arr[:mid]), merge_sort(arr[mid:]))\n```\n\n> Merge sort is **stable** and great for external sorting.\n\n## Complexity\n\nThe recurrence relation is:\n\n$$T(n) = 2T\\left(\\frac{n}{2}\\right) + O(n)$$\n\nBy the Master Theorem with $a = 2$, $b = 2$, $f(n) = n$, we get $T(n) = O(n \\log n)$.\n\nSpace complexity: $O(n)$ for the auxiliary array.'
   }, finish_reason: 'stop' }],
   usage: { prompt_tokens: 18, completion_tokens: 212, total_tokens: 230, completion_tokens_details: { reasoning_tokens: 47 } }
 }, null, 2)
@@ -120,7 +120,7 @@ const SAMPLE_ANT = JSON.stringify({
   id: 'msg_01Sample', type: 'message', role: 'assistant', model: 'claude-opus-4-6',
   content: [
     { type: 'thinking', thinking: 'User wants quicksort. I should explain pivot selection, partitioning, and add a JS example.' },
-    { type: 'text', text: '## Quicksort\n\nQuicksort uses a **pivot** element to partition arrays recursively.\n\n```javascript\nfunction quicksort(arr, lo = 0, hi = arr.length - 1) {\n  if (lo < hi) {\n    const p = partition(arr, lo, hi);\n    quicksort(arr, lo, p - 1);\n    quicksort(arr, p + 1, hi);\n  }\n  return arr;\n}\n```\n\n| Case | Time | Space |\n|------|------|-------|\n| Average | O(n log n) | O(log n) |\n| Worst | O(n²) | O(n) |' }
+    { type: 'text', text: '## Quicksort\n\nQuicksort uses a **pivot** element to partition arrays recursively.\n\n```javascript\nfunction quicksort(arr, lo = 0, hi = arr.length - 1) {\n  if (lo < hi) {\n    const p = partition(arr, lo, hi);\n    quicksort(arr, lo, p - 1);\n    quicksort(arr, p + 1, hi);\n  }\n  return arr;\n}\n```\n\n## Complexity Analysis\n\nFor a random pivot, the expected number of comparisons satisfies:\n\n$$E[C_n] = 2(n+1)H_n - 4n$$\n\nwhere $H_n = \\sum_{k=1}^{n} \\frac{1}{k}$ is the $n$-th harmonic number, giving $E[C_n] = O(n \\log n)$.\n\n| Case | Time | Space |\n|------|------|-------|\n| Average | $O(n \\log n)$ | $O(\\log n)$ |\n| Worst | $O(n^2)$ | $O(n)$ |' }
   ],
   stop_reason: 'end_turn',
   usage: { input_tokens: 22, output_tokens: 267, cache_read_input_tokens: 1024, cache_creation_input_tokens: 0 }

@@ -38,7 +38,7 @@
 .barTrack { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
 .barFill  { height: 100%; border-radius: 2px; transition: width 0.2s; }
 
-.exportPre { font-family: monospace; font-size: 0.72rem; background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; padding: 10px; color: #94a3b8; white-space: pre-wrap; max-height: 180px; overflow-y: auto; }
+.exportPre { font-family: monospace; font-size: 0.72rem; background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; padding: 10px; color: var(--muted); white-space: pre-wrap; max-height: 180px; overflow-y: auto; }
 
 /* AB */
 .abCriterion { margin-bottom: 14px; }
@@ -48,8 +48,8 @@
 .abVal { font-size: 0.78rem; font-weight: 700; min-width: 18px; text-align: right; }
 
 .winnerBanner { text-align: center; padding: 12px; border-radius: 8px; font-size: 0.9rem; font-weight: 700; margin-top: 12px; }
-.winnerA   { background: #1e3a5f; color: #60a5fa; }
-.winnerB   { background: #4a1040; color: #f472b6; }
+.winnerA   { background: var(--winner-a-bg); color: var(--winner-a-fg); }
+.winnerB   { background: var(--winner-b-bg); color: var(--winner-b-fg); }
 .winnerTie { background: var(--bg3); color: var(--muted); }
 
 /* Rubric */
@@ -61,11 +61,11 @@
 .rubricInput:focus { border-color: var(--blue); }
 .rubricList { display: flex; flex-direction: column; gap: 8px; }
 .rubricItem { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; transition: border-color 0.15s; }
-.rubricPass { border-color: #065f46 !important; background: #052e1e; }
-.rubricFail { border-color: #7f1d1d !important; background: #2a0a0a; }
+.rubricPass { border-color: var(--rubric-pass-border) !important; background: var(--rubric-pass-bg); }
+.rubricFail { border-color: var(--rubric-fail-border) !important; background: var(--rubric-fail-bg); }
 .rubricBtns { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
 .rubricText { flex: 1; font-size: 0.82rem; }
 .rubricDel  { background: transparent; border: none; color: var(--muted); cursor: pointer; font-size: 1.1rem; padding: 0 4px; }
 .rubricDel:hover { color: var(--red); }
-.activePass { background: #065f46 !important; border-color: var(--green) !important; color: var(--green) !important; }
-.activeFail { background: #7f1d1d !important; border-color: var(--red)   !important; color: var(--red)   !important; }
+.activePass { background: var(--rubric-pass-border) !important; border-color: var(--green) !important; color: var(--green) !important; }
+.activeFail { background: var(--rubric-fail-border) !important; border-color: var(--red)   !important; color: var(--red)   !important; }

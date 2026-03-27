@@ -144,11 +144,14 @@ export default function MermaidFormatter() {
   const downloadAsPng = useCallback(async () => {
     const pngBlob = await buildPngBlob()
     if (!pngBlob) { setStatus({ msg: '✖ PNG export failed', kind: 'err' }); return }
+    const url = URL.createObjectURL(pngBlob)
     const a = document.createElement('a')
-    a.href = URL.createObjectURL(pngBlob)
+    a.href = url
     a.download = 'diagram.png'
+    document.body.appendChild(a)
     a.click()
-    setTimeout(() => URL.revokeObjectURL(a.href), 5000)
+    document.body.removeChild(a)
+    setTimeout(() => URL.revokeObjectURL(url), 5000)
     setStatus({ msg: '✔ PNG downloaded', kind: 'ok' })
   }, [buildPngBlob])
 

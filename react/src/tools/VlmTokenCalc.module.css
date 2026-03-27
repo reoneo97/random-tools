@@ -47,7 +47,7 @@
   overflow: hidden;
   min-height: 240px;
 }
-.dropZone:hover, .dragging { border-color: var(--blue); background: #1a2540; }
+.dropZone:hover, .dragging { border-color: var(--blue); background: var(--drop-active-bg); }
 
 .dropPrompt {
   display: flex;

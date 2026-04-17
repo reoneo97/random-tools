@@ -1,11 +1,13 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import Panel from '../components/Panel'
 import Button from '../components/Button'
 import StatusBar from '../components/StatusBar'
 import ResizablePanels from '../components/ResizablePanels'
+import { renderMarkdown } from '../lib/markdown'
+import { submitRequest, loadApiKey, saveApiKey, type ApiFormat, type ApiResult } from '../lib/apiClient'
 import styles from './LlmRequestBuilder.module.css'
 
-type Format = 'openai' | 'anthropic'
+type Format = ApiFormat
 
 interface Message {
   id: string
@@ -46,31 +48,38 @@ export default function LlmRequestBuilder() {
   const [messages, setMessages]       = useState<Message[]>([{ id: uid(), role: 'user', content: '' }])
   const [maxTokens, setMaxTokens]     = useState(1024)
   const [temperature, setTemperature] = useState(0.7)
+  const [apiKey, setApiKey]           = useState(() => loadApiKey('openai'))
+  const [showKey, setShowKey]         = useState(false)
+  const [rightTab, setRightTab]       = useState<'json' | 'response'>('json')
+  const [result, setResult]           = useState<ApiResult | null>(null)
+  const [loading, setLoading]         = useState(false)
+  const [status, setStatus]           = useState<{ msg: string; kind: 'ok' | 'err' | 'muted' }>({ msg: '', kind: 'muted' })
   const [copied, setCopied]           = useState(false)
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => { setApiKey(loadApiKey(format)) }, [format])
+  useEffect(() => { saveApiKey(format, apiKey) }, [format, apiKey])
 
   const switchFormat = (f: Format) => { setFormat(f); setModel(DEFAULT_MODEL[f]) }
 
   const addMessage = (role: 'user' | 'assistant') =>
     setMessages(prev => [...prev, { id: uid(), role, content: '' }])
-
   const removeMessage = (id: string) =>
     setMessages(prev => prev.filter(m => m.id !== id))
-
   const updateContent = (id: string, content: string) =>
     setMessages(prev => prev.map(m => m.id === id ? { ...m, content } : m))
-
   const toggleRole = (id: string) =>
     setMessages(prev => prev.map(m =>
       m.id === id ? { ...m, role: m.role === 'user' ? 'assistant' : 'user' } : m
     ))
 
-  const outputJson = JSON.stringify(
+  const requestBody = useCallback(() =>
     format === 'openai'
       ? buildOpenAI(messages, system, model, maxTokens, temperature)
       : buildAnthropic(messages, system, model, maxTokens, temperature),
-    null, 2
-  )
+  [format, messages, system, model, maxTokens, temperature])
+
+  const outputJson = JSON.stringify(requestBody(), null, 2)
 
   const copy = async () => {
     await navigator.clipboard.writeText(outputJson)
@@ -79,9 +88,31 @@ export default function LlmRequestBuilder() {
     copyTimer.current = setTimeout(() => setCopied(false), 1500)
   }
 
+  const handleSubmit = useCallback(async () => {
+    if (!apiKey.trim()) {
+      setStatus({ msg: '✖ Enter an API key first', kind: 'err' }); return
+    }
+    const hasContent = messages.some(m => m.content.trim())
+    if (!hasContent) {
+      setStatus({ msg: '✖ Add at least one message with content', kind: 'err' }); return
+    }
+    setLoading(true)
+    setRightTab('response')
+    setStatus({ msg: 'Submitting…', kind: 'muted' })
+    const res = await submitRequest(format, requestBody(), apiKey.trim())
+    setResult(res)
+    setLoading(false)
+    setStatus(res.ok
+      ? { msg: `✔ ${res.outputTokens} output tokens · ${res.inputTokens} input tokens`, kind: 'ok' }
+      : { msg: `✖ ${res.error}`, kind: 'err' }
+    )
+  }, [format, apiKey, messages, requestBody])
+
   const clear = () => {
     setSystem('')
     setMessages([{ id: uid(), role: 'user', content: '' }])
+    setResult(null)
+    setStatus({ msg: '', kind: 'muted' })
   }
 
   return (
@@ -102,32 +133,34 @@ export default function LlmRequestBuilder() {
         />
         <div className={styles.sep} />
         <span className={styles.label}>Max tokens</span>
-        <input
-          className={styles.numInput}
-          type="number"
-          value={maxTokens}
-          onChange={e => setMaxTokens(Number(e.target.value))}
-          min={1}
-          max={65536}
-        />
+        <input className={styles.numInput} type="number" value={maxTokens} onChange={e => setMaxTokens(Number(e.target.value))} min={1} max={65536} />
         <span className={styles.label}>Temp</span>
-        <input
-          className={styles.numInput}
-          type="number"
-          value={temperature}
-          onChange={e => setTemperature(Number(e.target.value))}
-          min={0}
-          max={2}
-          step={0.1}
-        />
+        <input className={styles.numInput} type="number" value={temperature} onChange={e => setTemperature(Number(e.target.value))} min={0} max={2} step={0.1} />
         <div className={styles.sep} />
+        <Button variant="primary" onClick={handleSubmit} disabled={loading}>{loading ? 'Sending…' : 'Submit ↵'}</Button>
         <Button variant="danger" onClick={clear}>Clear</Button>
       </div>
 
-      <ResizablePanels defaultSplit={55}>
+      <ResizablePanels defaultSplit={50}>
         {/* Left: builder */}
         <Panel title="Request Builder">
           <div className={styles.builderCol}>
+            {/* API key */}
+            <label className={styles.fieldLabel}>{format === 'openai' ? 'OpenAI' : 'Anthropic'} API Key</label>
+            <div className={styles.keyRow}>
+              <input
+                className={styles.keyInput}
+                type={showKey ? 'text' : 'password'}
+                value={apiKey}
+                onChange={e => setApiKey(e.target.value)}
+                placeholder={format === 'openai' ? 'sk-...' : 'sk-ant-...'}
+                spellCheck={false}
+              />
+              <button className={styles.keyToggle} onClick={() => setShowKey(s => !s)}>{showKey ? 'Hide' : 'Show'}</button>
+            </div>
+
+            <div className={styles.divider} />
+
             <label className={styles.fieldLabel}>
               System prompt <span className={styles.optional}>(optional)</span>
             </label>
@@ -159,11 +192,7 @@ export default function LlmRequestBuilder() {
                     {m.role}
                   </button>
                   <span className={styles.msgIdx}>#{idx + 1}</span>
-                  <button
-                    className={styles.delBtn}
-                    onClick={() => removeMessage(m.id)}
-                    title="Remove message"
-                  >×</button>
+                  <button className={styles.delBtn} onClick={() => removeMessage(m.id)} title="Remove">×</button>
                 </div>
                 <textarea
                   className={styles.msgTextarea}
@@ -178,15 +207,39 @@ export default function LlmRequestBuilder() {
           </div>
         </Panel>
 
-        {/* Right: JSON output */}
+        {/* Right: JSON / response */}
         <Panel
-          title={`${format === 'openai' ? 'OpenAI' : 'Anthropic'} Request JSON`}
-          actions={<Button onClick={copy}>{copied ? 'Copied!' : 'Copy'}</Button>}
+          title={rightTab === 'json' ? `${format === 'openai' ? 'OpenAI' : 'Anthropic'} Request JSON` : 'Response'}
+          actions={
+            <>
+              <button className={`${styles.tabBtn} ${rightTab === 'json' ? styles.tabActive : ''}`} onClick={() => setRightTab('json')}>JSON</button>
+              <button className={`${styles.tabBtn} ${rightTab === 'response' ? styles.tabActive : ''}`} onClick={() => setRightTab('response')}>Response</button>
+              {rightTab === 'json'
+                ? <Button onClick={copy}>{copied ? 'Copied!' : 'Copy'}</Button>
+                : result?.ok && <Button onClick={() => navigator.clipboard.writeText(result.content)}>Copy text</Button>
+              }
+            </>
+          }
         >
-          <pre className={styles.outputPre}>{outputJson}</pre>
+          {rightTab === 'json' ? (
+            <pre className={styles.outputPre}>{outputJson}</pre>
+          ) : loading ? (
+            <div className={styles.placeholder}>Waiting for response…</div>
+          ) : !result ? (
+            <div className={styles.placeholder}>Click Submit to send the request.</div>
+          ) : result.ok ? (
+            <div className={styles.responseWrap}>
+              <div className={styles.mdContent} dangerouslySetInnerHTML={{ __html: renderMarkdown(result.content) }} />
+            </div>
+          ) : (
+            <div className={styles.errorBox}>
+              <strong>Error</strong>
+              <pre className={styles.errorPre}>{result.raw || result.error}</pre>
+            </div>
+          )}
         </Panel>
       </ResizablePanels>
-      <StatusBar message="" kind="muted" />
+      <StatusBar message={status.msg} kind={status.kind} />
     </div>
   )
 }

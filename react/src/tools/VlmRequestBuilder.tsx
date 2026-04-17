@@ -3,6 +3,8 @@ import Panel from '../components/Panel'
 import Button from '../components/Button'
 import StatusBar from '../components/StatusBar'
 import ResizablePanels from '../components/ResizablePanels'
+import { renderMarkdown } from '../lib/markdown'
+import { submitRequest, loadApiKey, saveApiKey, type ApiResult } from '../lib/apiClient'
 import styles from './VlmRequestBuilder.module.css'
 
 // ── Types ──────────────────────────────────────────────────────────────
@@ -80,6 +82,11 @@ export default function VlmRequestBuilder() {
   const [dragging, setDragging] = useState(false)
   const [copied, setCopied]   = useState(false)
   const [viewImg, setViewImg] = useState<ImageItem | null>(null)
+  const [apiKey, setApiKey]   = useState(() => loadApiKey('openai'))
+  const [showKey, setShowKey] = useState(false)
+  const [rightTab, setRightTab] = useState<'json' | 'response'>('json')
+  const [result, setResult]   = useState<ApiResult | null>(null)
+  const [loading, setLoading] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const loadFiles = useCallback((files: FileList | File[]) => {
@@ -120,8 +127,38 @@ export default function VlmRequestBuilder() {
     setTimeout(() => setCopied(false), 1500)
   }
 
+  const switchFormat = (f: Format) => {
+    setFormat(f)
+    setModel(DEFAULT_MODEL[f])
+    setApiKey(loadApiKey(f))
+  }
+
+  const handleSubmit = useCallback(async () => {
+    if (!apiKey.trim()) {
+      setStatus({ msg: '✖ Enter an API key first', kind: 'err' }); return
+    }
+    if (!images.length && !text.trim()) {
+      setStatus({ msg: '✖ Add at least one image or text', kind: 'err' }); return
+    }
+    setLoading(true)
+    setRightTab('response')
+    setStatus({ msg: 'Submitting…', kind: 'muted' })
+    const body = (format === 'openai'
+      ? buildOpenAI(images, text, detail, system, model)
+      : buildAnthropic(images, text, system, model)) as Record<string, unknown>
+    const res = await submitRequest(format, body, apiKey.trim())
+    setResult(res)
+    setLoading(false)
+    saveApiKey(format, apiKey.trim())
+    setStatus(res.ok
+      ? { msg: `✔ ${res.outputTokens} output tokens · ${res.inputTokens} input tokens`, kind: 'ok' }
+      : { msg: `✖ ${res.error}`, kind: 'err' }
+    )
+  }, [format, apiKey, images, text, detail, system, model])
+
   const clear = () => {
     setImages([]); setText(''); setSystem('')
+    setResult(null)
     setStatus({ msg: '', kind: 'muted' })
     if (fileRef.current) fileRef.current.value = ''
   }
@@ -133,7 +170,7 @@ export default function VlmRequestBuilder() {
       {/* Toolbar */}
       <div className={styles.toolbar}>
         <span className={styles.label}>Format</span>
-        <select className={styles.select} value={format} onChange={e => { const f = e.target.value as Format; setFormat(f); setModel(DEFAULT_MODEL[f]) }}>
+        <select className={styles.select} value={format} onChange={e => switchFormat(e.target.value as Format)}>
           <option value="openai">OpenAI</option>
           <option value="anthropic">Anthropic</option>
         </select>
@@ -156,6 +193,18 @@ export default function VlmRequestBuilder() {
           </>
         )}
         <div className={styles.sep} />
+        <span className={styles.label}>API Key</span>
+        <input
+          className={styles.keyInput}
+          type={showKey ? 'text' : 'password'}
+          value={apiKey}
+          onChange={e => setApiKey(e.target.value)}
+          placeholder={format === 'openai' ? 'sk-...' : 'sk-ant-...'}
+          spellCheck={false}
+        />
+        <button className={styles.keyToggle} onClick={() => setShowKey(s => !s)}>{showKey ? 'Hide' : 'Show'}</button>
+        <div className={styles.sep} />
+        <Button variant="primary" onClick={handleSubmit} disabled={loading}>{loading ? 'Sending…' : 'Submit ↵'}</Button>
         <Button variant="danger" onClick={clear}>Clear</Button>
       </div>
 
@@ -230,15 +279,37 @@ export default function VlmRequestBuilder() {
           </div>
         </Panel>
 
-        {/* Right: output */}
+        {/* Right: JSON / response */}
         <Panel
-          title={`${format === 'openai' ? 'OpenAI' : 'Anthropic'} Request JSON`}
-          actions={<Button onClick={copyOutput}>{copied ? 'Copied!' : 'Copy'}</Button>}
+          title={rightTab === 'json' ? `${format === 'openai' ? 'OpenAI' : 'Anthropic'} Request JSON` : 'Response'}
+          actions={
+            <>
+              <button className={`${styles.tabBtn} ${rightTab === 'json' ? styles.tabActive : ''}`} onClick={() => setRightTab('json')}>JSON</button>
+              <button className={`${styles.tabBtn} ${rightTab === 'response' ? styles.tabActive : ''}`} onClick={() => setRightTab('response')}>Response</button>
+              {rightTab === 'json'
+                ? <Button onClick={copyOutput}>{copied ? 'Copied!' : 'Copy'}</Button>
+                : result?.ok && <Button onClick={() => navigator.clipboard.writeText(result.content)}>Copy text</Button>
+              }
+            </>
+          }
         >
-          {outputJson ? (
-            <pre className={styles.outputPre}>{outputJson}</pre>
+          {rightTab === 'json' ? (
+            outputJson
+              ? <pre className={styles.outputPre}>{outputJson}</pre>
+              : <div className={styles.empty}>Add an image or text to generate the request body.</div>
+          ) : loading ? (
+            <div className={styles.empty}>Waiting for response…</div>
+          ) : !result ? (
+            <div className={styles.empty}>Click Submit to send the request.</div>
+          ) : result.ok ? (
+            <div className={styles.responseWrap}>
+              <div className={styles.mdContent} dangerouslySetInnerHTML={{ __html: renderMarkdown(result.content) }} />
+            </div>
           ) : (
-            <div className={styles.empty}>Add an image or text to generate the request body.</div>
+            <div className={styles.errorBox}>
+              <strong>Error</strong>
+              <pre className={styles.errorPre}>{result.raw || result.error}</pre>
+            </div>
           )}
         </Panel>
       </ResizablePanels>

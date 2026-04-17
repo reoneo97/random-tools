@@ -34,7 +34,8 @@ function extractMessages(data: Record<string, unknown>, fmt: string): Message[] 
     return ((data.choices as unknown[]) ?? []).map((c: unknown) => {
       const choice = c as Record<string, unknown>
       const msg    = (choice.message ?? {}) as Record<string, unknown>
-      let reasoning: string | null = msg.reasoning_content ? String(msg.reasoning_content) : null
+      let reasoning: string | null = (msg.reasoning_content ?? msg.reasoning)
+        ? String(msg.reasoning_content ?? msg.reasoning) : null
       let content = String(msg.content ?? '')
       if (!reasoning) {
         content = content.replace(/<think>([\s\S]*?)<\/think>\s*/i, (_, r) => {

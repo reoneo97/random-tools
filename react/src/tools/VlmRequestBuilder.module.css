@@ -127,6 +127,23 @@
   flex-shrink: 0;
 }
 .thumb { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+.thumbView {
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.6);
+  border: none;
+  cursor: pointer;
+  font-size: 0.7rem;
+  line-height: 18px;
+  text-align: center;
+  padding: 0;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.thumbWrap:hover .thumbView { opacity: 1; }
+
 .thumbRemove {
   position: absolute;
   top: 2px; right: 2px;
@@ -140,8 +157,73 @@
   line-height: 18px;
   text-align: center;
   padding: 0;
+  opacity: 0;
+  transition: opacity 0.15s;
 }
+.thumbWrap:hover .thumbRemove { opacity: 1; }
 .thumbRemove:hover { background: var(--red); }
+
+/* Lightbox */
+.lightboxBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.lightboxBox {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.lightboxHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.lightboxName {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lightboxClose {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 1.4rem;
+  line-height: 1;
+  padding: 0 4px;
+  flex-shrink: 0;
+}
+.lightboxClose:hover { color: var(--red); }
+.lightboxImg {
+  max-width: 100%;
+  max-height: calc(90vh - 90px);
+  object-fit: contain;
+  display: block;
+}
+.lightboxMeta {
+  padding: 8px 14px;
+  font-size: 0.72rem;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
 .thumbAdd {
   width: 72px; height: 72px;
   border: 2px dashed var(--border);

@@ -79,6 +79,7 @@ export default function VlmRequestBuilder() {
   const [status, setStatus]   = useState<{ msg: string; kind: 'ok' | 'err' | 'muted' }>({ msg: '', kind: 'muted' })
   const [dragging, setDragging] = useState(false)
   const [copied, setCopied]   = useState(false)
+  const [viewImg, setViewImg] = useState<ImageItem | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const loadFiles = useCallback((files: FileList | File[]) => {
@@ -176,6 +177,11 @@ export default function VlmRequestBuilder() {
                     <div key={img.id} className={styles.thumbWrap}>
                       <img src={img.dataUrl} alt={img.name} className={styles.thumb} />
                       <button
+                        className={styles.thumbView}
+                        onClick={e => { e.stopPropagation(); setViewImg(img) }}
+                        title="View"
+                      >👁</button>
+                      <button
                         className={styles.thumbRemove}
                         onClick={e => { e.stopPropagation(); removeImage(img.id) }}
                         title="Remove"
@@ -237,6 +243,21 @@ export default function VlmRequestBuilder() {
         </Panel>
       </ResizablePanels>
       <StatusBar message={status.msg} kind={status.kind} />
+
+      {viewImg && (
+        <div className={styles.lightboxBackdrop} onClick={() => setViewImg(null)}>
+          <div className={styles.lightboxBox} onClick={e => e.stopPropagation()}>
+            <div className={styles.lightboxHeader}>
+              <span className={styles.lightboxName}>{viewImg.name}</span>
+              <button className={styles.lightboxClose} onClick={() => setViewImg(null)}>×</button>
+            </div>
+            <img src={viewImg.dataUrl} alt={viewImg.name} className={styles.lightboxImg} />
+            <div className={styles.lightboxMeta}>
+              {viewImg.mimeType} · {(viewImg.sizeBytes / 1024).toFixed(1)} KB
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

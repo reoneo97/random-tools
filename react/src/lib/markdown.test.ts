@@ -153,6 +153,61 @@ describe('renderMarkdown — LaTeX with HTML-special chars', () => {
   })
 })
 
+// ── Tables ────────────────────────────────────────────────────────────
+
+describe('renderMarkdown — tables', () => {
+  it('renders a basic table', () => {
+    const md = '| A | B |\n|---|---|\n| 1 | 2 |'
+    const html = renderMarkdown(md)
+    expect(html).toContain('<table>')
+    expect(html).toContain('<thead>')
+    expect(html).toContain('<tbody>')
+    expect(html).toContain('<th')
+    expect(html).toContain('<td')
+  })
+
+  it('renders header cells correctly', () => {
+    const html = renderMarkdown('| Name | Age |\n|------|-----|\n| Bob | 30 |')
+    expect(html).toContain('>Name<')
+    expect(html).toContain('>Age<')
+  })
+
+  it('renders data cells correctly', () => {
+    const html = renderMarkdown('| Name | Age |\n|------|-----|\n| Bob | 30 |')
+    expect(html).toContain('>Bob<')
+    expect(html).toContain('>30<')
+  })
+
+  it('renders multiple data rows', () => {
+    const md = '| X |\n|---|\n| a |\n| b |\n| c |'
+    const html = renderMarkdown(md)
+    expect(html).toContain('>a<')
+    expect(html).toContain('>b<')
+    expect(html).toContain('>c<')
+  })
+
+  it('applies right alignment from :---:', () => {
+    const html = renderMarkdown('| N |\n|--:|\n| 1 |')
+    expect(html).toContain('text-align:right')
+  })
+
+  it('applies center alignment from :---:', () => {
+    const html = renderMarkdown('| N |\n|:--:|\n| 1 |')
+    expect(html).toContain('text-align:center')
+  })
+
+  it('renders inline markdown inside cells', () => {
+    const html = renderMarkdown('| Col |\n|-----|\n| **bold** |')
+    expect(html).toContain('<strong>bold</strong>')
+  })
+
+  it('renders LaTeX inside table cells', () => {
+    const html = renderMarkdown('| Complexity |\n|------------|\n| $O(n \\log n)$ |')
+    expect(hasKatex(html)).toBe(true)
+    expect(html).toContain('<table>')
+  })
+})
+
 // ── LaTeX does not render inside code blocks ───────────────────────────
 
 describe('renderMarkdown — LaTeX inside code blocks', () => {

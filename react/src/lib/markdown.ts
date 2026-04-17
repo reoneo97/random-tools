@@ -27,6 +27,23 @@ function inline(text: string): string {
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
 }
 
+// Split a table row into trimmed cells, stripping leading/trailing pipes
+function tableCells(row: string): string[] {
+  return row.replace(/^\||\|$/g, '').split('|').map(c => c.trim())
+}
+
+// True if a line is a table separator row: |---|:---:|---:|
+function isSepRow(row: string): boolean {
+  return /^\|?[\s\-:|]+\|/.test(row) && /[-]/.test(row)
+}
+
+function colAlign(sep: string): string {
+  const s = sep.trim()
+  if (s.startsWith(':') && s.endsWith(':')) return 'center'
+  if (s.endsWith(':')) return 'right'
+  return 'left'
+}
+
 export function renderMarkdown(text: string): string {
   const stash: string[] = []
   const stashHtml = (html: string) => {
@@ -83,6 +100,25 @@ export function renderMarkdown(text: string): string {
       html += '<ol>'
       while (i < lines.length && /^\d+\. /.test(lines[i])) { html += `<li>${inline(lines[i].replace(/^\d+\. /, ''))}</li>`; i++ }
       html += '</ol>'; continue
+    }
+
+    // Table: header row followed by a separator row
+    if (line.includes('|') && i + 1 < lines.length && isSepRow(lines[i + 1])) {
+      const headers = tableCells(line)
+      const aligns  = tableCells(lines[i + 1]).map(colAlign)
+      i += 2
+      let tbl = '<table><thead><tr>'
+      headers.forEach((h, j) => { tbl += `<th style="text-align:${aligns[j] ?? 'left'}">${inline(h)}</th>` })
+      tbl += '</tr></thead><tbody>'
+      while (i < lines.length && lines[i].includes('|') && !isSepRow(lines[i])) {
+        tbl += '<tr>'
+        tableCells(lines[i]).forEach((c, j) => { tbl += `<td style="text-align:${aligns[j] ?? 'left'}">${inline(c)}</td>` })
+        tbl += '</tr>'
+        i++
+      }
+      tbl += '</tbody></table>'
+      html += tbl
+      continue
     }
 
     if (line.trim() === '') { i++; continue }

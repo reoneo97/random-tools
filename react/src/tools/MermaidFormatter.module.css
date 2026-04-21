@@ -65,3 +65,116 @@
 .svgWrap {
   width: 100%;
 }
+
+/* Flowchart interactive mode */
+.svgWrap.interactive :global(g.node) {
+  cursor: pointer;
+  transition: filter 0.1s;
+}
+.svgWrap.interactive :global(g.node:hover) {
+  filter: brightness(1.15);
+}
+
+/* Toolbar hint */
+.hint {
+  font-size: 0.75rem;
+  color: var(--blue);
+  font-style: italic;
+}
+
+/* Color picker overlay (click-away dismiss) */
+.cpOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+}
+
+/* Color picker popup */
+.colorPicker {
+  position: fixed;
+  z-index: 1000;
+  transform: translateX(-50%);
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 200px;
+}
+
+.cpHeader {
+  font-size: 0.75rem;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.cpNodeId {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.78rem;
+  color: var(--text);
+  background: var(--bg3);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.cpPalette {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 5px;
+}
+
+.cpSwatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 5px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.1s, border-color 0.1s;
+}
+.cpSwatch:hover {
+  transform: scale(1.18);
+  border-color: var(--text);
+}
+
+.cpRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cpCustomLabel {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.cpCustom {
+  width: 34px;
+  height: 28px;
+  padding: 1px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  cursor: pointer;
+  background: transparent;
+}
+
+.cpReset {
+  margin-left: auto;
+  font-size: 0.74rem;
+  padding: 4px 10px;
+  background: var(--bg3);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  cursor: pointer;
+}
+.cpReset:hover { color: var(--red); border-color: var(--red); }

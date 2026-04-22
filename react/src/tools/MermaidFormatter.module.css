@@ -39,6 +39,57 @@
 }
 @media (max-width: 640px) { .panels { grid-template-columns: 1fr; } }
 
+/* AI generate section */
+.genSection {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.genPrompt {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  padding: 8px 10px;
+  background: var(--bg2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  resize: none;
+  outline: none;
+  width: 100%;
+}
+.genPrompt:focus { border-color: var(--blue); }
+.genPrompt::placeholder { color: var(--muted); opacity: 0.6; }
+
+.genRow {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.genInput {
+  flex: 1;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.75rem;
+  padding: 5px 8px;
+  background: var(--bg3);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  outline: none;
+  min-width: 0;
+}
+.genInput:focus { border-color: var(--blue); }
+.genInput::placeholder { color: var(--muted); opacity: 0.5; }
+
+.genModel { max-width: 160px; flex-shrink: 0; }
+
+.sourceDivider { height: 0; flex-shrink: 0; }
+
 .textarea {
   flex: 1;
   font-family: "JetBrains Mono", "Fira Code", monospace;

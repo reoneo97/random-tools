@@ -110,6 +110,13 @@ export default function MermaidFormatter() {
   const outputRef = useRef<HTMLDivElement>(null)
   const prevTheme = useRef(theme)
 
+  // AI generate state
+  const [genPrompt,   setGenPrompt]   = useState('')
+  const [genEndpoint, setGenEndpoint] = useState('https://openrouter.ai/api/v1/chat/completions')
+  const [genModel,    setGenModel]    = useState('google/gemini-2.0-flash-lite')
+  const [genApiKey,   setGenApiKey]   = useState('')
+  const [genLoading,  setGenLoading]  = useState(false)
+
   const render = useCallback(async (code: string, t: typeof theme) => {
     setColorPicker(null)
     if (!code.trim()) {
@@ -334,6 +341,46 @@ export default function MermaidFormatter() {
 
       <ResizablePanels>
         <Panel title="Mermaid Source">
+          <div className={styles.genSection}>
+            <textarea
+              className={styles.genPrompt}
+              rows={2}
+              value={genPrompt}
+              onChange={e => setGenPrompt(e.target.value)}
+              placeholder="Describe your diagram in plain English…"
+              spellCheck={false}
+            />
+            <div className={styles.genRow}>
+              <input
+                className={styles.genInput}
+                value={genEndpoint}
+                onChange={e => setGenEndpoint(e.target.value)}
+                placeholder="API endpoint"
+                spellCheck={false}
+              />
+              <input
+                className={`${styles.genInput} ${styles.genModel}`}
+                value={genModel}
+                onChange={e => setGenModel(e.target.value)}
+                placeholder="Model name"
+                spellCheck={false}
+              />
+            </div>
+            <div className={styles.genRow}>
+              <input
+                className={styles.genInput}
+                type="password"
+                value={genApiKey}
+                onChange={e => setGenApiKey(e.target.value)}
+                placeholder="API key"
+                spellCheck={false}
+              />
+              <Button variant="primary" onClick={() => {}} disabled={genLoading || !genPrompt.trim()}>
+                {genLoading ? 'Generating…' : 'Generate ✦'}
+              </Button>
+            </div>
+          </div>
+          <div className={styles.sourceDivider} />
           <textarea
             className={styles.textarea}
             value={input}

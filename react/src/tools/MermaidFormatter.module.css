@@ -229,3 +229,65 @@
   cursor: pointer;
 }
 .cpReset:hover { color: var(--red); border-color: var(--red); }
+
+/* Shape row */
+.cpShapeRow {
+  display: flex;
+  gap: 6px;
+}
+
+.cpShapeBtn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 7px 4px;
+  border: 1.5px solid var(--border);
+  border-radius: 7px;
+  cursor: pointer;
+  background: var(--bg3);
+  transition: border-color 0.1s, background 0.1s;
+}
+.cpShapeBtn:hover { border-color: var(--blue); }
+.cpShapeBtnActive {
+  border-color: var(--blue) !important;
+  background: color-mix(in srgb, var(--blue) 18%, var(--bg3));
+}
+
+.cpShapeLabel {
+  font-size: 0.65rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* Shape icons via CSS */
+.shapeIcon_rect {
+  display: inline-block;
+  width: 22px;
+  height: 14px;
+  border: 1.5px solid var(--text);
+  border-radius: 2px;
+}
+.shapeIcon_diamond {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid var(--text);
+  transform: rotate(45deg);
+  flex-shrink: 0;
+}
+.shapeIcon_circle {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--text);
+  border-radius: 50%;
+}
+
+.cpDivider {
+  height: 1px;
+  background: var(--border);
+  margin: 2px 0;
+}

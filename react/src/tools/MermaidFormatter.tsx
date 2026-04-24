@@ -93,20 +93,51 @@ function patchNodeSvg(svgEl: SVGSVGElement, nodeId: string, color: string | null
   }
 }
 
-// ── Component ─────────────────────────────────────────────────────────
+// ── Node shape helpers ────────────────────────────────────────────────
+
+const SHAPES = {
+  rect:    { open: '[',  close: ']'  },
+  diamond: { open: '{',  close: '}'  },
+  circle:  { open: '((', close: '))' },
+} as const
+type Shape = keyof typeof SHAPES
+
+const SHAPE_LABELS: Record<Shape, string> = { rect: 'Rectangle', diamond: 'Diamond', circle: 'Circle' }
+
+function changeNodeShapeInSource(source: string, nodeId: string, shape: Shape): string {
+  const esc = nodeId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const { open, close } = SHAPES[shape]
+  // Single-pass: alternate from most to least specific so (( is tried before (
+  const regex = new RegExp(
+    `\\b(${esc})(?:\\(\\(([^)]*)\\)\\)|\\[([^\\]]*)\\]|\\{([^}]*)\\}|\\(([^)]*)\\))`,
+    'g',
+  )
+  return source.replace(regex, (_, id, c1, c2, c3, c4) =>
+    `${id}${open}${c1 ?? c2 ?? c3 ?? c4 ?? ''}${close}`,
+  )
+}
+
+function detectNodeShape(nodeEl: Element): Shape | null {
+  if (nodeEl.querySelector('circle'))  return 'circle'
+  if (nodeEl.querySelector('polygon')) return 'diamond'
+  if (nodeEl.querySelector('rect'))    return 'rect'
+  return null
+}
+
+
 
 let idCounter = 0
 
 mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'loose' })
 
-interface ColorPicker { nodeId: string; x: number; y: number }
+interface NodePicker { nodeId: string; x: number; y: number; currentShape: Shape | null }
 
 export default function MermaidFormatter() {
   const [input, setInput]             = useState(SAMPLES.Flowchart)
   const [theme, setTheme]             = useState<'dark' | 'default' | 'neutral' | 'forest'>('default')
   const [status, setStatus]           = useState<{ msg: string; kind: 'ok' | 'err' | 'muted' }>({ msg: 'Paste Mermaid syntax and click Render.', kind: 'muted' })
   const [isFlowchart, setIsFlowchart] = useState(false)
-  const [colorPicker, setColorPicker] = useState<ColorPicker | null>(null)
+  const [colorPicker, setColorPicker] = useState<NodePicker | null>(null)
   const outputRef = useRef<HTMLDivElement>(null)
   const prevTheme = useRef(theme)
 
@@ -167,7 +198,7 @@ export default function MermaidFormatter() {
         const nodeId = extractNodeId(el.id)
         if (nodeId) {
           const r = el.getBoundingClientRect()
-          setColorPicker({ nodeId, x: r.left + r.width / 2, y: r.bottom + 8 })
+          setColorPicker({ nodeId, x: r.left + r.width / 2, y: r.bottom + 8, currentShape: detectNodeShape(el) })
           return
         }
       }
@@ -187,6 +218,13 @@ export default function MermaidFormatter() {
     setNodeColor(nodeId, color)
     setColorPicker(null)
   }, [setNodeColor])
+
+  const applyNodeShape = useCallback((nodeId: string, shape: Shape) => {
+    const newSource = changeNodeShapeInSource(input, nodeId, shape)
+    setInput(newSource)
+    render(newSource, theme)
+    setColorPicker(null)
+  }, [input, theme, render])
 
   useEffect(() => {
     if (!colorPicker) return
@@ -419,6 +457,20 @@ export default function MermaidFormatter() {
             <div className={styles.cpHeader}>
               Node: <code className={styles.cpNodeId}>{colorPicker.nodeId}</code>
             </div>
+            <div className={styles.cpShapeRow}>
+              {(Object.keys(SHAPES) as Shape[]).map(s => (
+                <button
+                  key={s}
+                  className={`${styles.cpShapeBtn} ${colorPicker.currentShape === s ? styles.cpShapeBtnActive : ''}`}
+                  onClick={() => applyNodeShape(colorPicker.nodeId, s)}
+                  title={SHAPE_LABELS[s]}
+                >
+                  <span className={styles[`shapeIcon_${s}`]} />
+                  <span className={styles.cpShapeLabel}>{SHAPE_LABELS[s]}</span>
+                </button>
+              ))}
+            </div>
+            <div className={styles.cpDivider} />
             <div className={styles.cpPalette}>
               {PALETTE.map(c => (
                 <button
